@@ -1,0 +1,65 @@
+# Unity: dados locais recriados pelo Editor
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Bb]uild/
+/[Bb]uilds/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/.vs/
+/.idea/
+/.gradle/
+/.kotlin/
+/.codex/
+/.cache/
+
+# Projetos e arquivos temporarios gerados por IDEs
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.tmp
+*.temp
+*.log
+*.dmp
+*.dump
+*.stackdump
+sysinfo.txt
+
+# Pacotes de entrega; Assets e seus .meta permanecem versionados
+*.apk
+*.aab
+*.unitypackage
+*.zip
+*.7z
+*.rar
+
+# Credenciais, chaves de assinatura e configuracoes privadas
+.env
+.env.*
+!.env.example
+!.env.sample
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+credentials.json
+credentials.*.json
+service-account*.json
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+Desktop.ini

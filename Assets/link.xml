@@ -1,0 +1,14 @@
+<linker>
+  <!-- Runtime rooms and accessories use CreatePrimitive. Preserve its native
+       component types even though their temporary colliders are removed.
+       https://docs.unity.com/en-us/engine/6000.0/script-reference/unityengine/gameobject/createprimitive -->
+  <assembly fullname="UnityEngine.CoreModule">
+    <type fullname="UnityEngine.MeshFilter" preserve="all" />
+    <type fullname="UnityEngine.MeshRenderer" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.PhysicsModule">
+    <type fullname="UnityEngine.BoxCollider" preserve="all" />
+    <type fullname="UnityEngine.SphereCollider" preserve="all" />
+    <type fullname="UnityEngine.CapsuleCollider" preserve="all" />
+  </assembly>
+</linker>
