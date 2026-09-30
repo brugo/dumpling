@@ -590,7 +590,7 @@ namespace MimoGarden
             bowl.gameObject.SetActive(false); brew.gameObject.SetActive(false); brewParts.gameObject.SetActive(false);
             if (tool) Destroy(tool.gameObject);
             title.text = "Uma receita. Uma surpresa.";
-            subtitle.text = "Arraste os ingredientes. Mexa em círculos. Descubra quem vai nascer.";
+            subtitle.text = "Arraste os ingredientes. Mova o dedo para misturar. Descubra quem vai nascer.";
             ResetCreationRitual(keepRecipe); BuildRecipeUI();
             Toast("Arraste uma garrafinha para a vaporeira para começar.", 5f);
         }

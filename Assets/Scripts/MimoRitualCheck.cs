@@ -99,13 +99,45 @@ namespace MimoGarden
             Check(!experience.CanFinalizeRecipe, "An unmixed ingredient blocks finalization.");
             experience.BeginBirth();
             Check(experience.CurrentScreen == "Laboratory", "Finalization is blocked during mixing.");
-            Vector2 a = experience.CreationStirScreenPoint(0f), b = experience.CreationStirScreenPoint(Mathf.PI);
-            experience.BeginStir(a);
-            for (int i = 0; i <= 12; i++) { experience.MoveStir(Vector2.Lerp(a, b, i / 12f)); yield return null; }
+            Vector2 center = experience.CreationDropScreenPosition;
+            Check(experience.BeginStir(center), "Stirring can start at the center, without tracing a ring.");
+            float unmoved = experience.StirProgress;
+            for (int i = 0; i < 6; i++) { experience.MoveStir(center); yield return null; }
+            Check(experience.StirProgress == unmoved, "Holding a stationary finger does not advance mixing.");
+            Vector2 a = center + Vector2.right * experience.CreationStation.StirScreenRadius * .55f;
+            for (int i = 1; i <= 8; i++) { experience.MoveStir(Vector2.Lerp(center, a, i / 8f)); yield return null; }
+            float forward = experience.StirProgress;
+            Check(forward > 0 && experience.CreationStation.SpoonSpinning, "A short straight swipe advances mixing and starts the spoon animation.");
+            Transform spoon = experience.CreationStation.transform.Find("The mixing spoon spins with every movement");
+            Vector3 spoonPosition = spoon.localPosition;
+            yield return new WaitForSecondsRealtime(.12f);
+            Check(Vector3.Distance(spoonPosition, spoon.localPosition) > .01f, "The spoon visibly rotates after a simple touch movement.");
+            for (int i = 1; i <= 8; i++) { experience.MoveStir(Vector2.Lerp(a, center, i / 8f)); yield return null; }
+            Check(experience.StirProgress > forward, "Reversing direction increases progress instead of undoing it.");
             experience.EndStir();
-            Check(experience.PendingStir && experience.StirProgress < 1f, "A straight swipe cannot stand in for circular stirring.");
+            float paused = experience.StirProgress;
+            yield return new WaitForSecondsRealtime(.65f);
+            Check(experience.StirProgress == paused && !experience.CreationStation.SpoonSpinning, "Lifting the finger retains progress and lets the spoon settle.");
+            Check(experience.MixingMeter && experience.MixingMeter.gameObject.activeInHierarchy && Mathf.Abs(experience.MixingMeterProgress - paused) < .001f,
+                "The visible bar tracks the partial mixture progress.");
+            Check(!experience.MixingMeter.GetComponent<Image>().raycastTarget && !experience.MixingMeter.GetComponentsInChildren<Graphic>().Any(g => g.raycastTarget),
+                "The progress bar cannot block touch gestures.");
+            Check(experience.MixingMeter.position.x < camera.pixelRect.xMax && experience.MixingMeter.position.y < center.y
+                && center.y - experience.MixingMeter.position.y < Screen.height * .40f, "The bar sits close below the steamer inside the play area.");
+            Check(!FindObjectsByType<Text>(FindObjectsSortMode.None).Any(t => t.text.Contains("Misturado:") || t.text.Contains("Mexa em círculos")),
+                "The menu has no percentage or circular-motion instruction.");
+            yield return Capture("02-partial-mixing-bar.png");
+            Check(experience.BeginIngredientDrag(1, 1, source), "Another ingredient can be dragged before mixing is complete.");
+            experience.CancelIngredientDrag();
+            Check(experience.PendingStir && experience.StirProgress == paused, "Canceling that drag preserves the pending mixture and its progress.");
+            yield return AddIngredient(experience, 1, 1);
+            Check(experience.AddedIngredientCount == 2 && experience.PendingStir && experience.StirProgress > 0 && experience.StirProgress < paused,
+                "A new ingredient joins the mixture without losing all previous mixing work.");
+            yield return Capture("02-new-ingredient-before-complete.png");
             yield return Stir(experience);
-            Check(!experience.PendingStir && experience.CanFinalizeRecipe, "Circular motion incorporates the color and enables finishing.");
+            Check(!experience.PendingStir && experience.CanFinalizeRecipe && experience.CreationStation.MixedIngredientCount == experience.AddedIngredientCount,
+                "Free movements mix all pending ingredients together and enable finishing.");
+            Check(experience.MixingMeterProgress == 1f, "A completely mixed recipe fills the nearby bar.");
             yield return Capture("02-mixed-color.png");
 
             yield return AddAndStir(experience, 1, 1);
@@ -201,10 +233,13 @@ namespace MimoGarden
 
         public static IEnumerator Stir(MimoExperience app)
         {
-            app.BeginStir(app.CreationStirScreenPoint(0));
+            Vector2 center = app.CreationDropScreenPosition;
+            app.BeginStir(center);
             for (int i = 1; i <= 120 && app.PendingStir; i++)
             {
-                app.MoveStir(app.CreationStirScreenPoint(i * Mathf.PI * 2f / 40f));
+                // Child-like back-and-forth movements: no angle, radius or direction to follow.
+                float radius = app.CreationStation.StirScreenRadius;
+                app.MoveStir(center + new Vector2(Mathf.Sin(i * .55f) * radius * .65f, Mathf.Cos(i * .8f) * radius * .10f));
                 yield return null;
             }
             app.EndStir(); yield return new WaitForSecondsRealtime(.25f);

@@ -10,6 +10,9 @@ namespace MimoGarden
         Outline[] recipeSelectionOutlines;
         Button finishRecipeButton;
         Text ritualHint, ritualFooter;
+        RectTransform mixingMeter;
+        Image mixingMeterFill;
+        Text mixingMeterLabel;
         MimoCreationStation creationStation;
         bool mainIngredientAdded, creationSyntheticStir;
         int creationFinger = -1, lastRitualStatus = -1;
@@ -19,6 +22,8 @@ namespace MimoGarden
         public bool PendingStir => creationStation && creationStation.PendingStir;
         public float StirProgress => creationStation ? creationStation.StirProgress : 0f;
         public int AddedIngredientCount => creationStation ? creationStation.AddedIngredientCount : 0;
+        public RectTransform MixingMeter => mixingMeter;
+        public float MixingMeterProgress => mixingMeterFill ? mixingMeterFill.rectTransform.anchorMax.x : 0f;
         public bool CanFinalizeRecipe => place == Place.Laboratory && mainIngredientAdded && creationStation && !creationStation.Busy && !creationStation.PendingStir;
         public Vector2 CreationDropScreenPosition => creationStation ? creationStation.CenterScreen : Vector2.zero;
         public Vector2 CreationStirScreenPoint(float radians) => creationStation ? creationStation.StirScreenPoint(radians) : Vector2.zero;
@@ -34,6 +39,7 @@ namespace MimoGarden
             if (!keepRecipe) { mainIngredientAdded = false; creationStation.ResetStation(); }
             else creationStation.RestoreForCreation();
             creationStation.gameObject.SetActive(true);
+            EnsureMixingMeter(); mixingMeter.gameObject.SetActive(true);
             actorRoot.gameObject.SetActive(false);
             bowl.gameObject.SetActive(false); brew.gameObject.SetActive(false); brewParts.gameObject.SetActive(false);
             lastRitualStatus = -1;
@@ -49,6 +55,7 @@ namespace MimoGarden
         public void CancelCreationRitual(bool hideStation = false)
         {
             creationFinger = -1; creationSyntheticStir = false;
+            if (mixingMeter) mixingMeter.gameObject.SetActive(false);
             if (!creationStation) return;
             creationStation.CancelPointer();
             if (hideStation) creationStation.gameObject.SetActive(false);
@@ -76,7 +83,7 @@ namespace MimoGarden
         {
             if (place != Place.Laboratory || !creationStation) return;
             index = Mathf.Clamp(index, 0, PetCatalog.Options(step).Length - 1);
-            if (creationStation.Busy || PendingStir) { Toast("Mexa o ingrediente em círculos antes do próximo.", 3f); return; }
+            if (creationStation.Busy) return;
             if (NoPhysicalIngredient(step, index))
             {
                 PetCatalog.Set(draft, step, index); RefreshRecipeSelection();
@@ -88,7 +95,8 @@ namespace MimoGarden
         {
             if (place != Place.Laboratory || !creationStation || category < 0 || category >= PetCatalog.CategoryCount) return false;
             if (index < 0 || index >= PetCatalog.Options(category).Length || NoPhysicalIngredient(category, index)) return false;
-            if (creationStation.Busy || PendingStir) { Toast("Faça uma volta com a colher para misturar primeiro.", 3f); return false; }
+            if (creationStation.Busy) return false;
+            EndStir();
             return creationStation.BeginIngredientDrag(category, index, screenPosition);
         }
         public void MoveIngredientDrag(Vector2 position) { if (creationStation) creationStation.MoveIngredientDrag(position); }
@@ -125,7 +133,42 @@ namespace MimoGarden
             RefreshRecipeSelection();
         }
         // Compatibility for old callers, without an automatic shortcut around the ritual.
-        public void SurpriseRecipe() { Toast("A surpresa está na vaporeira. Arraste uma cor e mexa em círculos!", 4f); }
+        public void SurpriseRecipe() { Toast("Arraste uma cor e mova o dedo na mistura!", 4f); }
+
+        void EnsureMixingMeter()
+        {
+            if (mixingMeter) return;
+            Image panel = Image("Mixing progress near steamer", safeArea, Hex("FFFAF4")); panel.raycastTarget = false;
+            mixingMeter = panel.rectTransform;
+            SetRect(mixingMeter, new Vector2(.5f, .5f), new Vector2(.5f, .5f), new Vector2(.5f, .5f), Vector2.zero, new Vector2(286, 72));
+            mixingMeterLabel = Label("Mova o dedo para misturar", mixingMeter, 16, ink, FontStyle.Bold);
+            mixingMeterLabel.alignment = TextAnchor.MiddleCenter;
+            SetRect(mixingMeterLabel.rectTransform, new Vector2(.5f, 1), new Vector2(.5f, 1), new Vector2(.5f, 1), new Vector2(0, -5), new Vector2(270, 30));
+            Image track = Image("Mixing progress track", mixingMeter, Hex("E6DCF2")); track.raycastTarget = false;
+            SetRect(track.rectTransform, new Vector2(.5f, 0), new Vector2(.5f, 0), new Vector2(.5f, 0), new Vector2(0, 12), new Vector2(258, 22));
+            mixingMeterFill = Image("Mixing progress fill", track.transform, purple); mixingMeterFill.raycastTarget = false;
+            Stretch(mixingMeterFill.rectTransform);
+        }
+
+        void RefreshMixingMeter()
+        {
+            EnsureMixingMeter();
+            mixingMeter.gameObject.SetActive(true);
+            // Follow the front of the vessel as resolution, camera and safe area change.
+            Vector2 screen = sceneCamera.WorldToScreenPoint(creationStation.transform.TransformPoint(new Vector3(0, .05f, -1.4f)));
+            float scale = canvas.scaleFactor;
+            screen.y -= 46f * scale;
+            screen.x = Mathf.Clamp(screen.x, Screen.safeArea.xMin + 150f * scale, sceneCamera.pixelRect.xMax - 150f * scale);
+            screen.y = Mathf.Clamp(screen.y, Screen.safeArea.yMin + 100f * scale, Screen.safeArea.yMax - 50f * scale);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(safeArea, screen, null, out Vector2 position);
+            mixingMeter.anchoredPosition = position;
+            RectTransform fillRect = mixingMeterFill.rectTransform;
+            fillRect.anchorMax = new Vector2(StirProgress, 1);
+            fillRect.offsetMin = fillRect.offsetMax = Vector2.zero;
+            mixingMeterFill.gameObject.SetActive(StirProgress > 0);
+            mixingMeterFill.color = CanFinalizeRecipe ? Hex("60BFA4") : purple;
+            mixingMeterLabel.text = creationStation.IsPouring ? "Ingrediente chegando..." : CanFinalizeRecipe ? "Tudo misturado!" : "Mova o dedo para misturar";
+        }
 
         void BuildRecipeUI()
         {
@@ -227,11 +270,11 @@ namespace MimoGarden
         void RefreshRitualStatus()
         {
             if (!creationStation || !ritualHint || place != Place.Laboratory) return;
-            int percent = Mathf.FloorToInt(StirProgress * 100);
-            int status = creationStation.IsPouring ? 1000 : PendingStir ? 2000 + percent : CanFinalizeRecipe ? 3000 : 4000;
+            RefreshMixingMeter();
+            int status = creationStation.IsPouring ? 1000 : PendingStir ? 2000 : CanFinalizeRecipe ? 3000 : 4000;
             if (lastRitualStatus == status) return; lastRitualStatus = status;
-            ritualHint.text = creationStation.IsPouring ? "Lá vai o ingrediente!" : PendingStir ? "Mexa em círculos\nMisturado: " + percent + "%" : CanFinalizeRecipe ? "Sua mistura está pronta!" : "Arraste uma cor para\na vaporeira.";
-            ritualFooter.text = PendingStir ? "Siga a volta da vaporeira\ncom o dedo." : CanFinalizeRecipe ? "Crie agora ou acrescente\noutro ingrediente." : "Puxe para a esquerda.\nDeslize para ver mais.";
+            ritualHint.text = "Arraste ingredientes\npara a vaporeira.";
+            ritualFooter.text = PendingStir ? "Pode acrescentar ingredientes\ne misturar quando quiser." : CanFinalizeRecipe ? "Crie agora ou acrescente\noutro ingrediente." : "Puxe para a esquerda.\nDeslize para ver mais.";
             finishRecipeButton.interactable = CanFinalizeRecipe;
         }
         void HandleCreationTouch()

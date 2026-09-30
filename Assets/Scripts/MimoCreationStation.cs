@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 
 namespace MimoGarden
 {
-    /// <summary>Small reusable 3D workshop. Only a real angular stirring gesture completes an ingredient.</summary>
+    /// <summary>Small reusable 3D workshop. Free touch movement drives a playful mixing animation.</summary>
     public sealed class MimoCreationStation : MonoBehaviour
     {
         enum Phase { Ready, Drag, Pour, Stir, Reveal }
@@ -20,9 +20,10 @@ namespace MimoGarden
         Vector3[] surfaceBase, surfaceVertices;
         Vector3 dragStart, spoonPoint;
         Color liquidColor, nextColor;
-        float elapsed, fill, targetFill, stirAngle, lastAngle, angularTravel, turnDirection, surfaceClock, rippleEnergy, reveal;
-        bool stirring, angleValid, released;
-        const float SurfaceRadius = 1.08f, StirRadius = .70f, RequiredDegrees = 340f;
+        float elapsed, fill, targetFill, stirAngle, mixingProgress, spinRemaining, surfaceClock, rippleEnergy, reveal;
+        Vector2 lastStirScreen;
+        bool stirring, released;
+        const float SurfaceRadius = 1.08f, StirRadius = .70f, RequiredTravelRadii = 3.2f;
         readonly Vector3 lidRest = new Vector3(1.60f, 1.15f, .78f);
         readonly Quaternion lidRestRotation = Quaternion.Euler(-68, 12, 14);
 
@@ -36,7 +37,8 @@ namespace MimoGarden
         public int DragIndex { get; private set; }
         public int AddedIngredientCount { get; private set; }
         public int MixedIngredientCount { get; private set; }
-        public float StirProgress => Mathf.Clamp01(angularTravel / RequiredDegrees);
+        public float StirProgress => mixingProgress;
+        public bool SpoonSpinning => spinRemaining > 0;
         public float LiquidFill => fill;
         public Vector3 WorldCenter => transform.TransformPoint(new Vector3(0, SurfaceY, 0));
         public Vector2 CenterScreen => view ? (Vector2)view.WorldToScreenPoint(WorldCenter) : Vector2.zero;
@@ -58,7 +60,7 @@ namespace MimoGarden
         public void ResetStation()
         {
             CancelPointer(); phase = Phase.Ready; AddedIngredientCount = MixedIngredientCount = 0;
-            fill = targetFill = 0; angularTravel = turnDirection = 0; reveal = rippleEnergy = 0;
+            fill = targetFill = 0; mixingProgress = spinRemaining = stirAngle = 0; reveal = rippleEnergy = 0;
             liquidColor = nextColor = C("FFE9C7"); SetColor(mixtureMaterial, liquidColor);
             basket.localScale = Vector3.one; basket.localPosition = Vector3.zero;
             lid.localPosition = lidRest; lid.localRotation = lidRestRotation; lid.localScale = Vector3.one;
@@ -79,7 +81,8 @@ namespace MimoGarden
 
         public bool BeginIngredientDrag(int category, int index, Vector2 screen)
         {
-            if (phase != Phase.Ready || !gameObject.activeInHierarchy) return false;
+            if (Busy || !gameObject.activeInHierarchy) return false;
+            EndStir(); spinRemaining = 0;
             DragCategory = category; DragIndex = index; phase = Phase.Drag; elapsed = 0;
             int key = category * 100 + index;
             if (!ingredientModels.TryGetValue(key, out ingredient))
@@ -101,7 +104,10 @@ namespace MimoGarden
             if (!PointOnSurface(screen, out Vector3 local) || new Vector2(local.x, local.z).magnitude > 1.19f)
             { CancelDrag(); return false; }
             phase = Phase.Pour; elapsed = 0; dragStart = ingredient.localPosition;
-            angularTravel = turnDirection = 0; angleValid = stirring = false;
+            int pendingIngredients = AddedIngredientCount - MixedIngredientCount;
+            // Keep work already done when another ingredient joins the same mixture.
+            mixingProgress *= pendingIngredients / (float)(pendingIngredients + 1);
+            spinRemaining = 0; stirring = false;
             AddedIngredientCount++; targetFill = Mathf.Min(1f, .50f + (AddedIngredientCount - 1) * .065f);
             nextColor = DragCategory == 0 ? PetCatalog.Colors[DragIndex] : liquidColor;
             if (DragCategory == 7 && DragIndex == 1) nextColor = Color.Lerp(liquidColor, Color.white, .16f);
@@ -112,40 +118,32 @@ namespace MimoGarden
         {
             if (phase != Phase.Drag) return;
             if (ingredient) ingredient.gameObject.SetActive(false);
-            phase = Phase.Ready;
+            phase = AddedIngredientCount > MixedIngredientCount ? Phase.Stir : Phase.Ready;
+            guide.gameObject.SetActive(phase == Phase.Stir);
         }
         public void CancelPointer() { CancelDrag(); EndStir(); }
 
         public bool BeginStir(Vector2 screen)
         {
-            if (phase != Phase.Stir || !StirPoint(screen, out Vector3 local)) return false;
-            stirring = true; angleValid = true; lastAngle = Mathf.Atan2(local.z, local.x) * Mathf.Rad2Deg;
-            spoonPoint = local; PlaceSpoon(local, lastAngle); return true;
+            if (phase != Phase.Stir || !StirPoint(screen, out _)) return false;
+            stirring = true; lastStirScreen = screen; return true;
         }
         public void MoveStir(Vector2 screen)
         {
             if (!stirring || phase != Phase.Stir) return;
-            if (!StirPoint(screen, out Vector3 local)) { angleValid = false; return; }
-            float angle = Mathf.Atan2(local.z, local.x) * Mathf.Rad2Deg;
-            if (angleValid)
+            Vector2 previous = lastStirScreen; lastStirScreen = screen;
+            if (!StirPoint(screen, out _) || !StirPoint(previous, out _)) return;
+            float movement = Vector2.Distance(previous, screen);
+            if (movement <= 0f) return;
+            mixingProgress = Mathf.Clamp01(mixingProgress + movement / (Mathf.Max(32f, StirScreenRadius) * RequiredTravelRadii));
+            spinRemaining = .55f; rippleEnergy = Mathf.Min(1, rippleEnergy + .25f);
+            if (mixingProgress >= 1f)
             {
-                float delta = Mathf.DeltaAngle(lastAngle, angle);
-                // Teleports across the middle, a straight swipe, or a jump after leaving the bowl do not count.
-                if (Mathf.Abs(delta) < 75f)
-                {
-                    if (turnDirection == 0 && Mathf.Abs(delta) > 1.2f) turnDirection = Mathf.Sign(delta);
-                    angularTravel = Mathf.Clamp(angularTravel + delta * turnDirection, 0, RequiredDegrees);
-                    stirAngle += delta; rippleEnergy = Mathf.Min(1, rippleEnergy + Mathf.Abs(delta) * .016f);
-                }
-            }
-            angleValid = true; lastAngle = angle; spoonPoint = local; PlaceSpoon(local, angle);
-            if (angularTravel >= RequiredDegrees)
-            {
-                phase = Phase.Ready; stirring = angleValid = false; MixedIngredientCount++;
+                phase = Phase.Ready; stirring = false; MixedIngredientCount = AddedIngredientCount;
                 guide.gameObject.SetActive(false); rippleEnergy = 1f;
             }
         }
-        public void EndStir() { stirring = false; angleValid = false; }
+        public void EndStir() { stirring = false; }
         bool PointOnSurface(Vector2 screen, out Vector3 local)
         {
             local = default;
@@ -158,7 +156,7 @@ namespace MimoGarden
         {
             if (!PointOnSurface(screen, out local)) return false;
             float radius = new Vector2(local.x, local.z).magnitude;
-            return radius >= .20f && radius <= 1.12f;
+            return radius <= 1.40f;
         }
 
         public void Tick(float dt)
@@ -172,7 +170,15 @@ namespace MimoGarden
                 surfaceClock = 0; AnimateSurface(); SetColor(mixtureMaterial, liquidColor);
             }
             rippleEnergy = Mathf.MoveTowards(rippleEnergy, stirring ? .6f : 0, dt * .45f);
-            if (!stirring && phase != Phase.Reveal)
+            if (spinRemaining > 0 && (phase == Phase.Stir || phase == Phase.Ready))
+            {
+                spinRemaining = Mathf.Max(0, spinRemaining - dt);
+                stirAngle += dt * 360f;
+                float angle = stirAngle * Mathf.Deg2Rad;
+                Vector3 orbit = new Vector3(Mathf.Cos(angle) * StirRadius, SurfaceY + .015f, Mathf.Sin(angle) * StirRadius);
+                spoonPoint = Vector3.Lerp(spoonPoint, orbit, dt * 18f); PlaceSpoon(spoonPoint, stirAngle);
+            }
+            else if (phase != Phase.Reveal)
             {
                 Vector3 rest = phase == Phase.Stir ? new Vector3(.70f, SurfaceY + .015f, 0) : new Vector3(.85f, .83f, -.10f);
                 spoonPoint = Vector3.Lerp(spoonPoint, rest, dt * 4); PlaceSpoon(spoonPoint, 0);
@@ -319,7 +325,7 @@ namespace MimoGarden
             surfaceMesh = MakeSurface(); surfaceBase = surfaceMesh.vertices; surfaceVertices = new Vector3[surfaceBase.Length];
             liquid = Part("The swirling liquid", transform, surfaceMesh, Vector3.zero, Vector3.one, mixtureMaterial);
             flow = Part("A continuous poured stream", transform, cylinderMesh, Vector3.zero, Vector3.one, streamMaterial);
-            spoon = Group("The mixing spoon follows your finger", transform);
+            spoon = Group("The mixing spoon spins with every movement", transform);
             spoonTip = Part("Spoon bowl", spoon, sphereMesh, Vector3.zero, new Vector3(.28f, .10f, .36f), pearl);
             Part("Spoon long jade handle", spoon, cylinderMesh, new Vector3(.05f, .47f, 0), new Vector3(.10f, .92f, .10f), mint);
             Part("Spoon handle round end", spoon, sphereMesh, new Vector3(.05f, .94f, 0), new Vector3(.15f, .20f, .14f), light);
@@ -327,7 +333,7 @@ namespace MimoGarden
             Material foam = Mat("Creamy ripple highlights", C("FFEECF"), .6f);
             ripples = new Transform[3];
             for (int i = 0; i < ripples.Length; i++) ripples[i] = Part("Liquid swirl " + i, transform, ringMesh, Vector3.zero, Vector3.one, foam);
-            guide = Group("Follow this stirring circle", transform); beads = new Transform[12];
+            guide = Group("Mixing sparkle pearls", transform); beads = new Transform[12];
             for (int i = 0; i < beads.Length; i++) beads[i] = Part("Mixing progress pearl " + i, guide, sphereMesh, Vector3.zero, Vector3.one * .05f, light);
         }
 

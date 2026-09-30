@@ -1,6 +1,16 @@
 # Mimo — meu pequeno mundo
 
-Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.5.3**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
+Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.5.4**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
+
+## Mistura com movimentos livres — 0.5.4
+
+Qualquer movimento do dedo sobre a vaporeira conta para misturar: reto, de ida e volta, irregular ou passando pelo centro. A colher gira automaticamente quando o dedo se move. Alguns movimentos simples já completam a mistura; não é preciso desenhar círculos. Pausar ou tirar o dedo preserva o progresso.
+
+A barra de progresso fica logo abaixo da vaporeira, acompanhando seu enquadramento. Ela se enche em roxo e fica verde com **Tudo misturado!** ao concluir. A porcentagem e a orientação para mexer em círculos foram retiradas do menu.
+
+Você pode acrescentar ingredientes enquanto a mistura ainda está incompleta. Cada novo ingrediente entra na mistura, preservando parte do trabalho já feito; cancelar um arraste mantém o progresso. O botão **Criar meu Mimo!** fica disponível quando há uma cor e todos os ingredientes adicionados estão misturados.
+
+Capturas e resultados ficam no [relatório da 0.5.4](../MimoGardenPreview/0.5.4/VALIDACAO.md). Esta atualização não altera os amigos já salvos.
 
 ## Interface ilustrada — 0.5.3
 
@@ -70,8 +80,8 @@ Os efeitos usam shaders próprios e um ambiente de reflexão HDR pré-calculado;
 ## Criar o primeiro Mimo
 
 1. Toque no desenho da **garrafinha colorida** e puxe uma garrafinha da lista para a esquerda, levando-a até a vaporeira. Solte dentro dela. Deslizar a lista para cima ou para baixo apenas percorre as opções.
-2. Mexa a colher em círculos sobre a mistura até incorporar o ingrediente.
-3. Se quiser, adicione outras características pelas categorias da lateral. Arraste e misture cada ingrediente antes de continuar.
+2. Mova o dedo sobre a mistura em qualquer direção. A colher gira e a barra abaixo da vaporeira mostra o avanço.
+3. Se quiser, adicione outras características pelas categorias da lateral. Você pode juntar vários ingredientes antes de completar a mistura.
 4. Toque em **Criar meu Mimo!**, acompanhe a revelação, dê um nome e escolha **Levar para casa**.
 
 Uma cor misturada já permite criar. Orelhas, rabo, óculos, chapéu e asas são opcionais e começam ausentes; os olhos iniciais são Clássicos e a textura inicial é Macio. O botão de criação só fica disponível depois de adicionar uma cor e terminar de mexer os ingredientes.
