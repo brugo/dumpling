@@ -16,7 +16,7 @@ namespace MimoGarden
 
         public int FinishIndex => Data == null ? 0 : Mathf.Clamp(Data.finishIndex, 0, PetCatalog.FinishNames.Length - 1);
         public string FinishName => PetCatalog.FinishNames[FinishIndex];
-        public bool IsTranslucentFinish => FinishIndex == 2 || FinishIndex == 3;
+        public bool IsTranslucentFinish => string.IsNullOrEmpty(VisibleCosmetic) && (FinishIndex == 2 || FinishIndex == 3);
         public int InternalGlitterCount => _glitterRenderer && _glitterRenderer.enabled ? ReflectiveGlitterPieces : 0;
         public bool HasExternalGlow => _auraRenderer && _auraRenderer.enabled;
         public bool FinishMaterialsReady => _finishShader && _finishShader.isSupported && _finishEnvironment && _body && _body.sharedMaterial.shader == _finishShader;
@@ -47,6 +47,7 @@ namespace MimoGarden
             PetCatalog.Set(Data, 7, finish);
             if (!_ready) return;
             ApplyFinish();
+            ApplyCosmetic();
             StateChanged?.Invoke();
         }
 

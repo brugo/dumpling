@@ -30,3 +30,7 @@ Inclua também os arquivos de documentação e configuração que tiver alterado
 Na configuração inicial, os assets necessários somam cerca de 20 MB e o maior arquivo tem aproximadamente 8,4 MB. Git LFS não foi configurado. Reavalie LFS se surgirem modelos, texturas, áudio ou arquivos Blender grandes, sobretudo arquivos individuais acima de 50 MB que mudem com frequência. Preserve os arquivos editáveis de origem mantidos fora desta pasta em uma estratégia de backup própria.
 
 O repositório é local. Nenhum remoto foi criado ou configurado. Um remoto e seu compartilhamento podem ser definidos depois, conforme a escolha do proprietário.
+
+## Coleções da 0.6.0
+
+As novas imagens originais do ChatGPT e os modelos FBX fazem parte de Assets, com seus .meta. ArtSource agora guarda o script Blender e os três arquivos .blend editáveis; backups .blend1/.blend2 são excluídos. Os assets e fontes desta entrega somam aproximadamente 36,5 MiB; o maior arquivo individual tem 8 MiB. LFS não foi necessário nem configurado. Builds, capturas e relatórios continuam nas pastas vizinhas, fora do Git.

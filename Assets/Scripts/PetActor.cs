@@ -355,6 +355,7 @@ namespace MimoGarden
             ApplyBodyVariants();
             ApplyAccessories();
             ApplyFinish();
+            ApplyCosmetic();
             RefreshVisibleGeometry();
             UploadSkin();
             _pulse = 0.3f;
@@ -710,6 +711,7 @@ namespace MimoGarden
             _ready = false;
             ReleaseSoapLayer();
             ReleaseFinishes();
+            ReleaseCosmetic();
             ReleaseAccessories();
             ReleaseBodyVariants();
             // Destroy is deferred until the end of the frame; hide failed instances immediately.

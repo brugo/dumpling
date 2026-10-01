@@ -89,6 +89,7 @@ namespace MimoGarden
 
         void OnDestroy()
         {
+            CloseShop();
             SaveCare();
             foreach (PetActor pet in playgroundPets) if (pet) pet.StateChanged -= RefreshNeeds;
             if (creationActor) creationActor.StateChanged -= RefreshNeeds;
@@ -103,6 +104,7 @@ namespace MimoGarden
         {
             if (paused)
             {
+                CloseShop();
                 if (IsFriendDialogOpen) CancelFriendDialog();
                 ReleaseTouch(); CancelCreationRitual(); ResetBathTools(); CancelSnack(); SaveCare(); wasPaused = true;
             }
@@ -126,6 +128,7 @@ namespace MimoGarden
 
         void Update()
         {
+            if (IsShopOpen && Input.GetKeyDown(KeyCode.Escape)) { if(shopDialog) CloseShopDialog(); else CloseShop(); }
             if (IsFriendDialogOpen && Input.GetKeyDown(KeyCode.Escape)) CancelFriendDialog();
             if (lastScreen.x != Screen.width || lastScreen.y != Screen.height || Mathf.Abs(lastCanvasScale - canvas.scaleFactor) > .001f || lastSafeArea != Screen.safeArea) ApplySafeArea();
             float t = Time.time;
@@ -140,9 +143,9 @@ namespace MimoGarden
             }
             if (ball && place == Place.Home) ball.localRotation = Quaternion.Euler(0, t * 5f, Mathf.Sin(t * .65f) * 3f);
             if (toast && toast.gameObject.activeSelf && Time.unscaledTime > toastUntil) toast.gameObject.SetActive(false);
-            if (Time.unscaledTime >= saveAt) { SaveCare(); saveAt = Time.unscaledTime + 12f; }
-            if (place == Place.Home) HandleTouch();
-            else if (place == Place.Laboratory) HandleCreationTouch();
+            if (Time.unscaledTime >= saveAt) { saveAt = Time.unscaledTime + (SaveCare() ? 12f : 3f); }
+            if (place == Place.Home && !IsShopOpen) HandleTouch();
+            else if (place == Place.Laboratory && !IsShopOpen) HandleCreationTouch();
             if (place == Place.Home && Time.time > nextAutoSpark)
             {
                 nextAutoSpark = Time.time + 4.5f;
@@ -490,7 +493,7 @@ namespace MimoGarden
             toast = Rect("A little whisper", safeArea); SetRect(toast, new Vector2(.5f, 1), new Vector2(.5f, 1), new Vector2(.5f, 1), new Vector2(0, -170), new Vector2(540, 43));
             Image toastBG = toast.gameObject.AddComponent<Image>(); toastBG.sprite = rounded; toastBG.type = UnityEngine.UI.Image.Type.Sliced; toastBG.color = new Color(1, .99f, .96f, .91f); toastBG.raycastTarget = false;
             toastText = Label("", toast, 17, ink); Stretch(toastText.rectTransform, 16, 6); toastText.alignment = TextAnchor.MiddleCenter;
-            toast.gameObject.SetActive(false); BuildSidebarChrome(); ApplySafeArea();
+            toast.gameObject.SetActive(false); BuildSidebarChrome(); ApplySafeArea(); BuildShopEntry();
         }
 
         void ApplySafeArea()
@@ -848,16 +851,27 @@ namespace MimoGarden
             toastText.text = text; toast.gameObject.SetActive(true); toastUntil = Time.unscaledTime + seconds;
         }
 
-        void SaveCare()
+        bool SaveCare()
         {
             if (saved != null && saved.created && place == Place.Home && actor != null && actor.Data != null)
             {
+                // Build a candidate without changing the live collection before the atomic commit succeeds.
+                var candidate = new PetCollection {
+                    activePetId = actor.Data.petId,
+                    retiredPetIds = collection == null || collection.retiredPetIds == null
+                        ? new List<string>() : new List<string>(collection.retiredPetIds)
+                };
+                foreach (PetActor pet in playgroundPets) if (pet && pet.Data.created) candidate.pets.Add(pet.Data);
+                if (!PetStorage.SaveCollection(candidate))
+                {
+                    if (toast && toastText) Toast("Não foi possível salvar agora. Mantenha o jogo aberto; vamos tentar novamente.", 6f);
+                    Debug.LogWarning("MIMO_SAVE_CARE_FAILED: the previous file and live collection were preserved.");
+                    return false;
+                }
+                collection = candidate;
                 saved = actor.Data;
-                collection.activePetId = saved.petId;
-                collection.pets.Clear();
-                foreach (PetActor pet in playgroundPets) if (pet && pet.Data.created) collection.pets.Add(pet.Data);
-                PetStorage.SaveCollection(collection);
             }
+            return true;
         }
 
         /// <summary>Deterministic, observable smoke path for the editor test harness. No production startup shortcut.</summary>

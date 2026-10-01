@@ -1,0 +1,42 @@
+{
+  "generator": "ChatGPT image_gen",
+  "createdUTC": "2026-10-01",
+  "assets": [
+    {
+      "file": "aurora.png",
+      "prompt": "Create a production-quality seamless square albedo texture for a premium children's 3D mochi pet cosmetic set named Jardim de Aurora. Flat orthographic textile/material texture ONLY: seamless gentle mint-green pearlescent silk base with tiny hand-painted ivory daisies, buttery yellow centers, sparse delicate sage fern sprigs and subtle embossed petal filigree. Refined bespoke luxury toy finish, beautiful joyful pastel aesthetic, restrained scale and airy spacing. Uniform diffuse lighting, no directional shadows, no gradients across edges, no objects, no character, no text, no border, no mockup. Pattern seamlessly tileable on all four edges. Tiny motifs occupying 3-8% of image width. High-quality rich micro-detail, clear green-and-ivory theme appropriate for a coordinated daisy flower crown and leaf wings.",
+      "sha256": "98ddb931c4c71f6a5a10842175bd26227e17207bd0aa69c870cb78f83da22f26",
+      "pixels": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "luna.png",
+      "prompt": "Create a production-quality seamless square albedo texture for a premium children's 3D mochi pet cosmetic set named Guardiao da Lua. Flat orthographic textile/material texture ONLY: richly beautiful lilac midnight lavender silk base with sparse tiny champagne-gold crescent moons, miniature ivory four-point stars and finely painted constellation dots, opalescent lavender and periwinkle woven micro-detail. Premium bespoke celestial toy finish, airy clean spacing; refined tasteful tiny motifs 3-6 percent of image width. Uniform diffuse lighting. Seamlessly tileable all four edges; no gradient across edges, no shadows, no objects, no character, no text, no border, no mockup. Coordinate with a velvet wizard hat with a golden crescent and star-trimmed short cape. Not dark or ominous; joyful and whimsical.",
+      "sha256": "7274149d886d1a680edd2418b3369552c2b167089dcd772f0dddabbd8d30c89e",
+      "pixels": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "mar.png",
+      "prompt": "Create a production-quality seamless square albedo texture for a premium children's 3D mochi pet cosmetic set named Perola do Mar. Flat orthographic textile/material texture ONLY: luminous pale aqua and seafoam nacre silk base, scattered tiny hand-painted ivory scallop shells with subtle pink interiors and champagne gold fine contours, tiny pearl dots and delicate flowing aqua wave embroidery. Sophisticated bespoke luxury toy finish, airy clean spacing. Small motifs about 3-6 percent of width, no dense busy pattern. Uniform diffuse lighting, seamlessly tileable all four edges, no gradients across edges, no directional shadows, no objects, no character, no text, no border, no mockup. Coordinate with a polished scallop shell beret, a pearl necklace and delicate pearl edged aqua fins. Refined, precious, friendly.",
+      "sha256": "3127f4d3778040facab8d9e3283410de7a1fa1ec420ce62ec51899167e05e2d8",
+      "pixels": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "crystal.png",
+      "prompt": "A single beautiful lavender aqua faceted crystal diamond currency icon for a premium children's pastel 3D toy game. Realistic polished softly bevelled clear crystal with lilac core, mint and pale pink reflected facets, warm subtle gold sparkle reflections, clean highly recognizable simple silhouette and exquisite 3D finish. Centered single object, full object visible, 20% transparent margin on all sides. Isolated transparent background, no floor, no shadow outside object, no text, no symbols, no border, no additional objects. Production-quality app illustration, not flat vector.",
+      "sha256": "5d8dc764f287a9c341f4a0965d7b7252210fc2dcdb8ebbc8bb1b61a5404f8cee",
+      "pixels": [
+        1374,
+        1145
+      ]
+    }
+  ]
+}

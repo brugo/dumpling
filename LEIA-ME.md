@@ -1,6 +1,12 @@
-# Mimo — meu pequeno mundo
+# Mimo - meu pequeno mundo
 
-Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.5.5**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
+## Coleções e cristais de teste — 0.6.0
+
+O botão **Coleções** apresenta Jardim de Aurora, Guardião da Lua e Pérola do Mar, com materiais especiais, chapéus e acessórios coordenados. As texturas e o cristal foram criados pelo ChatGPT; os cartões mostram prévias renderizadas do personagem real, que podem ser giradas. Compras de cristais e gasto nas coleções passam pela área dos responsáveis, com confirmação e tratamento de saldo insuficiente e itens já adquiridos. Equipar e retirar preserva as escolhas gratuitas anteriores. Não há anúncios nem cobrança real.
+
+Esta entrega contém exclusivamente um provedor de pagamento simulado, com preços provisórios, persistência atômica e prevenção de crédito duplicado. Leia [LOJA-TESTE.md](LOJA-TESTE.md) para usar os controles de teste, entender o armazenamento local e conferir as pendências precisas para Google Play Billing oficial.
+
+Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.6.0**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
 
 ## Banho de bolhas e parque temático — 0.5.5
 

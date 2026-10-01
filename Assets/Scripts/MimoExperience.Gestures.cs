@@ -156,7 +156,7 @@ namespace MimoGarden
 
         void OnApplicationFocus(bool focused)
         {
-            if (!focused) { ReleaseTouch(); CancelCreationRitual(); }
+            if (!focused) { CloseShop(); ReleaseTouch(); CancelCreationRitual(); }
         }
 
         void OnDisable() { ResetPetInteraction(); CancelCreationRitual(); }

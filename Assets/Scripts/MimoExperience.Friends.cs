@@ -76,7 +76,7 @@ namespace MimoGarden
             detail.rectTransform.anchorMin = Vector2.up; detail.rectTransform.anchorMax = Vector2.one; detail.rectTransform.pivot = Vector2.up;
             detail.rectTransform.offsetMin = new Vector2(122, -101); detail.rectTransform.offsetMax = new Vector2(-8, -62);
             string message = replacementDialog
-                ? "Este amigo será excluído para guardar " + draft.petName + ". Os outros dois continuam no parquinho."
+                ? "Este amigo será excluído para guardar " + draft.petName + ". Os outros amigos continuam no parquinho."
                 : "Este amigo será excluído do aparelho. Os outros amigos continuam no parquinho.";
             FriendDialogLabel(panel, message, 220, 94, 21);
             FriendDialogLabel(panel, "Se mudar de ideia, toque em Cancelar.", 319, 35, 17);

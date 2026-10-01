@@ -21,6 +21,7 @@ namespace MimoGarden
         public int hatIndex;
         public int wingsIndex;
         public int finishIndex;
+        public string cosmeticKitId = "";
         public bool created;
         public float hunger = 0.75f;
         public float cleanliness = 0.80f;
@@ -198,7 +199,7 @@ namespace MimoGarden
             target.schemaVersion = saved.schemaVersion; target.petId = saved.petId; target.petName = saved.petName;
             target.colorIndex = saved.colorIndex; target.earsIndex = saved.earsIndex; target.tailIndex = saved.tailIndex;
             target.eyeIndex = saved.eyeIndex; target.glassesIndex = saved.glassesIndex; target.hatIndex = saved.hatIndex;
-            target.wingsIndex = saved.wingsIndex; target.finishIndex = saved.finishIndex; target.created = saved.created;
+            target.cosmeticKitId = saved.cosmeticKitId; target.wingsIndex = saved.wingsIndex; target.finishIndex = saved.finishIndex; target.created = saved.created;
             target.hunger = saved.hunger; target.cleanliness = saved.cleanliness; target.joy = saved.joy;
             target.savedUtcTicks = saved.savedUtcTicks; target.recipeSeed = saved.recipeSeed;
         }
@@ -342,6 +343,7 @@ namespace MimoGarden
             pet.cleanliness = ValidUnit(pet.cleanliness, 0.80f);
             pet.joy = ValidUnit(pet.joy, 0.80f);
             if (pet.savedUtcTicks < 0 || pet.savedUtcTicks > DateTime.MaxValue.Ticks) pet.savedUtcTicks = 0;
+            if (MimoShopCatalog.Find(pet.cosmeticKitId) == null) pet.cosmeticKitId = "";
             pet.schemaVersion = 3;
         }
     }

@@ -2,6 +2,8 @@ Shader "MimoGarden/PastelFinish"
 {
     Properties
     {
+        _KitMap ("Generated cosmetic albedo", 2D) = "white" {}
+        _KitEnabled ("Cosmetic collection active", Float) = 0
         [MainTexture] _BaseMap ("Washable skin", 2D) = "white" {}
         [MainColor] _BaseColor ("Pastel tint", Color) = (1,1,1,1)
         [HideInInspector] _Color ("Legacy tint", Color) = (1,1,1,1)
@@ -50,6 +52,7 @@ Shader "MimoGarden/PastelFinish"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
 
+            TEXTURE2D(_KitMap); SAMPLER(sampler_KitMap);
             TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
             TEXTURE2D(_SoapMask); SAMPLER(sampler_SoapMask);
             TEXTURECUBE(_FinishEnvironment); SAMPLER(sampler_FinishEnvironment);
@@ -60,6 +63,7 @@ Shader "MimoGarden/PastelFinish"
                 half _Iridescence, _Grain, _SoapAmount, _FinishKind;
                 half _EnvironmentStrength, _EnvironmentMipCount, _Transmission, _SceneRefraction;
                 half _RefractionStrength, _Thickness, _Subsurface, _CoatStrength;
+                half _KitEnabled;
                 half _MicroNormalStrength, _DetailScale;
                 half _SrcBlend, _DstBlend, _ZWrite;
             CBUFFER_END
@@ -207,6 +211,8 @@ Shader "MimoGarden/PastelFinish"
                 // and suppress every optical treatment wherever dirt is still present.
                 half clean = saturate(skin.a), dirt = 1.0h - clean;
                 half3 tint = max(skin.rgb * _BaseColor.rgb, half3(.015,.015,.015));
+                half3 kitColor = SAMPLE_TEXTURE2D(_KitMap, sampler_KitMap, input.uv).rgb;
+                tint = lerp(tint, kitColor, saturate(_KitEnabled * clean));
                 half3 geometricNormal = normalize(input.normalWS);
                 half3 view = SafeNormalize(GetWorldSpaceViewDir(input.positionWS));
                 half3 tangent, bitangent;

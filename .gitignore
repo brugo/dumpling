@@ -63,3 +63,6 @@ service-account*.json
 .DS_Store
 Thumbs.db
 Desktop.ini
+# Blender editor recovery copies; keep the editable .blend originals.
+*.blend1
+*.blend2
