@@ -2,7 +2,7 @@
 The fabric albedos are original image_gen outputs kept in Resources/Cosmetics.
 Coordinates: X left/right, Blender Y depth (front negative), Z height, body 0..1.
 """
-import bpy, math, os, sys
+import bpy, bmesh, math, os, sys
 from mathutils import Vector
 OUT=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Assets','Resources','Cosmetics')
 os.makedirs(OUT,exist_ok=True)
@@ -58,7 +58,7 @@ def star(p,r,m):
     fs=[tuple(range(9,-1,-1)),tuple(range(10,20))]+[(i,(i+1)%10,(i+1)%10+10,i+10) for i in range(10)]
     o=surface('Gold star embroidery',vs,fs,m);b=o.modifiers.new('Rounded star edge','BEVEL');b.width=.004;b.segments=2
 
-for kit in ['aurora','luna','mar']:
+for kit in (['luna'] if '--luna-only' in sys.argv else ['aurora','luna','mar']):
     bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
     fabric=mat('fabric_'+kit,{'aurora':(.55,.8,.62),'luna':(.57,.46,.84),'mar':(.4,.77,.84)}[kit]);gold=mat('gold',(.94,.73,.33));pearl=mat('pearl',(1,.95,.87))
     if kit=='aurora':
@@ -81,14 +81,29 @@ for kit in ['aurora','luna','mar']:
         for j in range(R):
             for i in range(N):a=j*N+i;b=j*N+(i+1)%N;fs.append((a,b,b+N,a+N))
         surface('Curved velvet lunar hat',vs,fs,fabric);torus('Champagne hat band',.905,.29,.23,.009,gold);crescent((.02,-.23,1.04),.08,gold)
-        vs=[];fs=[];N=28;R=15
-        for j in range(R+1):
-            t=j/R
-            for i in range(N+1):
-                a=(i/N-.5)*math.pi*1.1;r=.48+.14*t;vs.append((math.sin(a)*r,math.cos(a)*r,.82-.58*t+.045*math.cos(i/N*math.pi*6)*t))
-        for j in range(R):
-            for i in range(N):k=j*(N+1)+i;fs.append((k,k+1,k+N+2,k+N+1))
-        o=surface('Draped constellation cape',vs,fs,fabric);s=o.modifiers.new('Cape tailored thickness','SOLIDIFY');s.thickness=.013
+        # A rounded open-back hem lets every tail leave the rump without piercing cloth.
+        # The upper bridge is continuous; lower left/right panels are tailored around the opening.
+        def cape_point(t,side,across=0):
+            y=.82-.58*t
+            gap=.36*math.sqrt(max(0,min(1,(.71-y)/.16)))
+            a=side*(gap+(math.pi*.55-gap)*across);r=.48+.14*t
+            fold=.045*math.cos((a/(math.pi*.55)+1)*.5*math.pi*6)*t
+            return (math.sin(a)*r,math.cos(a)*r,y+fold)
+        vs=[];fs=[];N=24;R=30
+        for side in [-1,1]:
+            offset=len(vs)
+            for j in range(R+1):
+                for i in range(N+1):vs.append(cape_point(j/R,side,i/N))
+            for j in range(R):
+                for i in range(N):
+                    k=offset+j*(N+1)+i
+                    fs.append((k,k+1,k+N+2,k+N+1) if side<0 else (k,k+N+1,k+N+2,k+1))
+        o=surface('Draped constellation cape with rounded tail opening',vs,fs,fabric)
+        bm=bmesh.new();bm.from_mesh(o.data);bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.00001);bm.to_mesh(o.data);bm.free();o.data.update()
+        s=o.modifiers.new('Cape tailored thickness','SOLIDIFY');s.thickness=.013
+        start=(.82-.71)/.58
+        trim=[cape_point(1-(1-start)*i/40,-1) for i in range(41)]+[cape_point(start+(1-start)*i/40,1) for i in range(1,41)]
+        tube('Champagne piping around the tailored tail opening',trim,.007,gold)
         for side in [-1,1]:
             star((side*.42,-.33,.76),.055,gold)
             tube('Soft cape collar',[(side*.40,-.32,.78),(side*.22,-.51,.73),(0,-.55,.70)],.014,gold)

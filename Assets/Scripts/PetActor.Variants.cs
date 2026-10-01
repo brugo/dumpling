@@ -364,9 +364,11 @@ namespace MimoGarden
         {
             string[] ids = { "none", "puff", "curl", "fox", "cat", "dragon", "fish", "lightning" };
             float bodyScale = _variantBodyBounds.size.y / 2.4f;
+            _puff=AttachImportedTail(_puff,false);
+            _curl=AttachImportedTail(_curl,true);
             for (int type = 3; type < _tailVariants.Length; type++)
             {
-                Transform root = _tailVariants[type] = VariantGroup("tail:" + ids[type], _motion, new Vector3(.63f, .36f, .72f));
+                Transform root = _tailVariants[type] = VariantGroup("tail:" + ids[type], _motion, TailRearAnchor());
                 if (type == 3)
                 {
                     for (int i = 0; i < 9; i++)
@@ -415,9 +417,9 @@ namespace MimoGarden
                     VariantPart("lightning pearl joint", root, new Vector3(.32f, .01f, 0), new Vector3(.78f, .32f, .31f), _pearl);
                 }
                 root.localScale = Vector3.one * bodyScale;
-                root.localPosition = new Vector3(_variantBodyBounds.center.x + (type == 5 ? -.40f : .42f) * _variantBodyBounds.extents.x,
-                    _variantBodyBounds.min.y + _variantBodyBounds.size.y * (type == 6 ? .29f : .23f),
-                    _variantBodyBounds.center.z + _variantBodyBounds.extents.z * .40f);
+                root.localPosition = TailRearAnchor();
+                // Authored lengths run along +X (dragon -X); rotate into the body's rear +Z axis.
+                root.localRotation=Quaternion.Euler(0,type==5 ? 90 : -90,0);
                 AddVariantWiggle(root, 1f, type == 4 ? 5f : 3.5f);
                 root.gameObject.SetActive(false);
             }

@@ -66,3 +66,4 @@ Desktop.ini
 # Blender editor recovery copies; keep the editable .blend originals.
 *.blend1
 *.blend2
+/.utmp/

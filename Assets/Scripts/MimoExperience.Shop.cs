@@ -95,8 +95,8 @@ namespace MimoGarden
             Bounds b=p.VisibleBounds;
             var camObject=new GameObject("Coleção camera "+kit.id);var c=camObject.AddComponent<Camera>();c.enabled=false;
             c.cullingMask=1<<30;c.clearFlags=CameraClearFlags.SolidColor;c.backgroundColor=kit.accent;
-            c.orthographic=true;c.orthographicSize=Mathf.Max(b.size.y*.61f,b.size.x*.61f);c.nearClipPlane=.1f;c.farClipPlane=20;
-            c.transform.position=b.center+new Vector3(0,.10f,-7);c.transform.LookAt(b.center);
+            c.orthographic=true;c.nearClipPlane=.1f;c.farClipPlane=20;
+            FrameShopPreview(p,c);
             var data=c.gameObject.AddComponent<UniversalAdditionalCameraData>();data.renderPostProcessing=false;
             var rt=new RenderTexture(512,512,24,RenderTextureFormat.ARGB32){name="Prévia fiel "+kit.id,antiAliasing=1};rt.Create();c.targetTexture=rt;
             shopPreviewObjects.Add(root);shopPreviewObjects.Add(camObject);shopPreviewTextures.Add(rt);shopPreviewActors[kit.id]=p;shopPreviewCameras[kit.id]=c;
@@ -109,7 +109,13 @@ namespace MimoGarden
         }
         public void RotateKitPreview(string id)
         {
-            if(shopPreviewActors.TryGetValue(id,out var p) && p){p.transform.Rotate(0,45,0);var c=shopPreviewCameras[id];UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(c,new UniversalRenderPipeline.SingleCameraRequest{destination=c.targetTexture});}
+            if(shopPreviewActors.TryGetValue(id,out var p) && p){p.transform.Rotate(0,45,0);var c=shopPreviewCameras[id];FrameShopPreview(p,c);UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(c,new UniversalRenderPipeline.SingleCameraRequest{destination=c.targetTexture});}
+        }
+        void FrameShopPreview(PetActor p,Camera c)
+        {
+            Bounds b=p.VisibleBounds;
+            c.orthographicSize=Mathf.Max(b.size.y,Mathf.Max(b.size.x,b.size.z))*.61f;
+            c.transform.position=b.center+new Vector3(0,.10f,-7);c.transform.LookAt(b.center);
         }
         public void CloseShop(bool resetAuthorization=true)
         {
