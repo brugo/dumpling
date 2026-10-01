@@ -34,6 +34,14 @@ namespace MimoGarden.EditorTools
                 texture.filterMode = FilterMode.Bilinear; texture.wrapMode = TextureWrapMode.Clamp;
                 texture.SaveAndReimport();
             }
+            var parkImporter = AssetImporter.GetAtPath("Assets/Resources/Environment/MimoThemePark.png") as TextureImporter;
+            if (parkImporter) {
+                parkImporter.textureType = TextureImporterType.Default; parkImporter.sRGBTexture = true;
+                parkImporter.mipmapEnabled = false; parkImporter.maxTextureSize = 2048;
+                parkImporter.textureCompression = TextureImporterCompression.Uncompressed;
+                parkImporter.wrapMode = TextureWrapMode.Clamp; parkImporter.filterMode = FilterMode.Bilinear;
+                parkImporter.SaveAndReimport();
+            }
             var importer = AssetImporter.GetAtPath("Assets/Resources/MimoCharacter.fbx") as ModelImporter;
             if (importer == null) throw new Exception("O personagem MimoCharacter.fbx não foi encontrado.");
             importer.isReadable = true;
@@ -108,7 +116,7 @@ namespace MimoGarden.EditorTools
 
             PlayerSettings.companyName = "Mimo Garden";
             PlayerSettings.productName = "Mimo — Meu pequeno mundo";
-            PlayerSettings.bundleVersion = "0.5.4";
+            PlayerSettings.bundleVersion = "0.5.5";
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.defaultScreenWidth = 1440;
             PlayerSettings.defaultScreenHeight = 900;
@@ -194,7 +202,7 @@ namespace MimoGarden.EditorTools
                 PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
                 PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
                 PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
-                PlayerSettings.Android.bundleVersionCode = Mathf.Max(9, PlayerSettings.Android.bundleVersionCode);
+                PlayerSettings.Android.bundleVersionCode = Mathf.Max(10, PlayerSettings.Android.bundleVersionCode);
                 PlayerSettings.Android.buildApkPerCpuArchitecture = false;
                 PlayerSettings.Android.splitApplicationBinary = false;
                 PlayerSettings.Android.useCustomKeystore = false;

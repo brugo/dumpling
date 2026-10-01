@@ -17,40 +17,7 @@ namespace MimoGarden
             Material coral = Mat("Park soft coral", Hex("EB9783"), .16f);
             Material gold = Mat("Park butter yellow", Hex("F3CE75"), .25f);
 
-            Box("The spacious clover lawn", gardenRoom, new Vector3(0, -.15f, 2), new Vector3(28, .22f, 26), lawn);
-            Box("A blue afternoon beyond the park", gardenRoom, new Vector3(0, 6, 11), new Vector3(38, 22, .2f), sky);
-            for (int i = -3; i <= 3; i++)
-            {
-                Material hill = Mat("Park hill layer " + (i & 1), (i & 1) == 0 ? Hex("95C7AE") : Hex("B4D5AF"), .05f);
-                Pill("Distant soft landscape", gardenRoom, new Vector3(i * 4.5f, .6f, 9.8f), new Vector3(8, 4.1f + (i & 1), 1.7f), hill);
-            }
-            Material cloud = Mat("Park cloud white", Hex("FFFBEF"), .05f);
-            for (int i = 0; i < 3; i++)
-            {
-                Vector3 c = new Vector3(-6.5f + i * 6.8f, 5.4f + (i & 1) * .65f, 9.5f);
-                Pill("A drifting cloud", gardenRoom, c, new Vector3(2.9f, .63f, .46f), cloud);
-                Pill("Cloud round top", gardenRoom, c + new Vector3(-.35f, .28f, -.03f), new Vector3(1.02f, .87f, .45f), cloud);
-                Pill("Cloud small top", gardenRoom, c + new Vector3(.55f, .19f, -.02f), new Vector3(.94f, .71f, .43f), cloud);
-            }
-            Pill("A gentle golden sun", gardenRoom, new Vector3(4.7f, 6.3f, 9.4f), new Vector3(1.14f, 1.14f, .15f), gold);
-
-            // Broad, connected patches mark the usable floor without enclosing the children in a little rug.
-            Disk("The open meadow oval", gardenRoom, new Vector3(0, -.027f, 1.35f), new Vector3(12.8f, .013f, 10.4f), grassLight);
-            Pill("A sandy way through the garden", gardenRoom, new Vector3(.4f, -.008f, 1.5f), new Vector3(3.25f, .026f, 11.5f), path).localRotation = Quaternion.Euler(0, -13, 0);
-            Disk("Central picnic lawn", gardenRoom, new Vector3(0, .014f, .42f), new Vector3(6.1f, .012f, 5.3f), Mat("Park fresh clover", Hex("9CBF7D"), .08f));
-            Disk("Quiet reading corner sand", gardenRoom, new Vector3(3.6f, -.005f, 3.8f), new Vector3(4.3f, .02f, 3.45f), path);
-            Disk("Swing landing sand", gardenRoom, new Vector3(-3.5f, -.003f, 3.55f), new Vector3(4.1f, .022f, 3.55f), path);
-            for (int i = 0; i < 7; i++)
-            {
-                Vector3 p = new Vector3(.48f + Mathf.Sin(i * .8f) * .34f, .021f, 1.5f + i * .73f);
-                Pill("A rounded stepping stone", gardenRoom, p, new Vector3(.87f + (i & 1) * .14f, .11f, .5f), cream).localRotation = Quaternion.Euler(0, -12 + i * 9, 0);
-            }
-
-            BuildPlaygroundFence(cream, oak, teal, coral, gold);
-            BuildPlaygroundTree(new Vector3(-6.25f, 0, 5.3f), 1.05f, oak, cream);
-            BuildPlaygroundTree(new Vector3(6.25f, 0, 5.5f), .96f, oak, cream);
-            BuildPlaygroundTree(new Vector3(-8.0f, 0, 7.9f), .7f, oak, cream);
-            BuildPlaygroundTree(new Vector3(8.0f, 0, 8.3f), .74f, oak, cream);
+            BuildThemeParkBackdrop();
 
             BuildPlaygroundSwing(oak, lightOak, cream, teal);
             BuildPlaygroundSofa(oak, cream, coral);
@@ -67,18 +34,29 @@ namespace MimoGarden
             }
             BuildPlaygroundPicnic(oak, cream, teal, coral);
 
-            // A few large readable markings invite play without adding UI or dozens of tiny particles.
-            for (int i = 0; i < 3; i++)
-            {
-                Transform blossom = Group("A lawn daisy", gardenRoom);
-                blossom.localPosition = new Vector3(-1.65f + i * 1.1f, .057f, -2.25f + (i & 1) * .19f);
-                for (int j = 0; j < 5; j++)
-                {
-                    float a = j * Mathf.PI * .4f;
-                    Pill("Painted daisy petal", blossom, new Vector3(Mathf.Cos(a) * .15f, 0, Mathf.Sin(a) * .15f), new Vector3(.2f, .025f, .2f), cream);
-                }
-                Disk("Daisy gold centre", blossom, new Vector3(0, .016f, 0), new Vector3(.16f, .016f, .16f), gold);
-            }
+        }
+
+        Transform themeParkBackdrop;
+        public bool HasThemeParkBackdrop => themeParkBackdrop;
+        void BuildThemeParkBackdrop()
+        {
+            Texture2D picture = Resources.Load<Texture2D>("Environment/MimoThemePark");
+            if (!picture) { Debug.LogError("Theme park image is missing."); return; }
+            Material material = Mat("ImageGen theme park panorama",Color.white);
+            material.shader = Shader.Find("Universal Render Pipeline/Unlit");
+            material.SetColor("_BaseColor",Color.white); material.SetTexture("_BaseMap",picture);
+            themeParkBackdrop = Shape("The illustrated theme park panorama",PrimitiveType.Quad,gardenRoom,Vector3.zero,Vector3.one,material);
+            LayoutThemeParkBackdrop();
+        }
+        void LayoutThemeParkBackdrop()
+        {
+            if (!themeParkBackdrop || !sceneCamera) return;
+            const float distance = 45f;
+            float height = 2 * Mathf.Tan(sceneCamera.fieldOfView*Mathf.Deg2Rad*.5f)*distance;
+            float width = Mathf.Max(height*16f/9f,height*sceneCamera.aspect);
+            themeParkBackdrop.position = sceneCamera.transform.position + sceneCamera.transform.forward*distance;
+            themeParkBackdrop.rotation = sceneCamera.transform.rotation;
+            themeParkBackdrop.localScale = new Vector3(width,height,1);
         }
 
         void BuildPlaygroundFence(Material cream, Material oak, Material teal, Material coral, Material gold)

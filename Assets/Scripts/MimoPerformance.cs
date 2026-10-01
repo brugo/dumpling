@@ -18,7 +18,8 @@ namespace MimoGarden
 
         public static void Configure(GameObject owner)
         {
-            Application.targetFrameRate = Lightweight ? 30 : 60;
+            // Leave headroom above the 30 FPS floor rather than pacing right on its boundary.
+            Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 0;
             if (Lightweight) owner.AddComponent<MimoPerformance>();
         }
@@ -46,7 +47,7 @@ namespace MimoGarden
             nextReview = Time.realtimeSinceStartup + 8f;
             nextIncrease = nextReview + 10f;
             nextLog = nextReview;
-            Debug.Log("MIMO_MOBILE_PROFILE fps=30 scale=" + runtime.renderScale.ToString("F2") +
+            Debug.Log("MIMO_MOBILE_PROFILE fps=60 minimumGoal=30 scale=" + runtime.renderScale.ToString("F2") +
                 " hdr=false msaa=1 shadows=none additionalLights=0 nativeUI=true");
         }
 
@@ -56,13 +57,13 @@ namespace MimoGarden
             float now = Time.realtimeSinceStartup;
             averageFrame = samples++ == 0 ? Time.unscaledDeltaTime : Mathf.Lerp(averageFrame, Time.unscaledDeltaTime, .04f);
             if (now < nextReview || samples < 30) return;
-            nextReview = now + 2f;
-            if (averageFrame > .040f && runtime.renderScale > minimumScale + .005f)
+            nextReview = now + 1f;
+            if (averageFrame > .031f && runtime.renderScale > minimumScale + .005f)
             {
                 runtime.renderScale = Mathf.Max(minimumScale, runtime.renderScale - .05f);
                 nextIncrease = now + 12f;
             }
-            else if (averageFrame < .035f && now > nextIncrease && runtime.renderScale < maximumScale - .005f)
+            else if (averageFrame < .024f && now > nextIncrease && runtime.renderScale < maximumScale - .005f)
             {
                 runtime.renderScale = Mathf.Min(maximumScale, runtime.renderScale + .05f);
                 nextIncrease = now + 12f;

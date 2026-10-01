@@ -83,6 +83,7 @@ namespace MimoGarden
             if (saved.created) EnterHome();
             else EnterLaboratory();
             if (MimoPerformance.Lightweight) OptimizeMobileWorld();
+            else { BuildMobileContactShadow(); UpdateMobileContactShadow(); }
             saveAt = Time.unscaledTime + 12f;
         }
 

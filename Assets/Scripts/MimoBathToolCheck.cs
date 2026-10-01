@@ -85,10 +85,15 @@ namespace MimoGarden
             experience.DragBathToolGesture(BodyPoint(.15f, .56f), .025f);
             yield return new WaitForSecondsRealtime(.2f);
             covered = actor.SoapCoverage; soapedClean = actor.Data.cleanliness;
-            Check(covered > .06f, "Dragging the sponge across several physical patches creates persistent soap coverage.");
+            Check(covered > .90f, "Simple sponge movements spread dense foam over essentially the whole body.");
+            Check(actor.SoapBubbleCount >= 2000 && actor.GetComponentInChildren<MimoBubbleSurface>(), "Thousands of iridescent bubbles cover the actual body surface using one renderer.");
             Check(Mathf.Abs(soapedClean - initialClean) < .006f, "Applying soap does not wash the dirt away.");
             Check(experience.IsBathToolHeld && !experience.IsWaterRunning, "The sponge remains held without emitting rinse water.");
             yield return Capture("bath-tool-sponge-active.png");
+            float soapTimingStart = Time.realtimeSinceStartup, soapFrameSum = 0; int soapFrames = 0;
+            while (Time.realtimeSinceStartup-soapTimingStart < 2f) { yield return null; soapFrameSum += Time.unscaledDeltaTime; soapFrames++; }
+            float soapFps = soapFrames/Mathf.Max(.001f,soapFrameSum);
+            Check(!Application.isMobilePlatform || soapFps >= 30, "The dense fully soaped body renders above 30 FPS on the physical tablet (observed " + soapFps.ToString("F1") + " FPS).");
             experience.EndBathToolGesture(); yield return new WaitForSecondsRealtime(.35f);
             Check(!experience.IsBathToolHeld, "Releasing the sponge ends tool ownership.");
             Check(Mathf.Abs(actor.SoapCoverage - covered) < .006f, "Foam remains on the body after the sponge is released.");
@@ -100,16 +105,20 @@ namespace MimoGarden
             Check(experience.BeginBathToolGesture(source), "The shower is picked up from its own scene geometry.");
             experience.DragBathToolGesture(BodyPoint(.18f, .55f), .035f); yield return null;
             Check(experience.IsWaterRunning, "Dragging the held shower emits animated, visible water.");
+            Vector2 gripScreen = camera.WorldToScreenPoint(experience.BathToolWorldPosition);
+            Vector2 sprayScreen = camera.WorldToScreenPoint(experience.BathWaterWorldStart);
+            Check(Vector2.Distance(gripScreen,sprayScreen) > Screen.height * .08f, "The long handle keeps the spray head visibly away from the child's touch.");
+            Check(actor.GetComponentsInChildren<MimoBubbleSurface>().Length == 1 && FindAnyObjectByType<MimoShowerWater>(), "Soap and clear shower water use their dedicated efficient renderers.");
             Check(actor.SoapCoverage > covered * .75f, "One water frame cannot instantly clear the whole body.");
             yield return Capture("bath-tool-shower-active.png");
-            for (float t = 0; t < 7f; t += Time.unscaledDeltaTime)
+            for (float t = 0; t < 3f; t += Time.unscaledDeltaTime)
             {
                 experience.DragBathToolGesture(BodyPoint(Mathf.Sin(t * 2.1f) * .6f, .52f + Mathf.Sin(t * 1.6f) * .27f), Time.unscaledDeltaTime);
                 yield return null;
             }
             rinsed = actor.SoapCoverage; rinsedClean = actor.Data.cleanliness;
-            Check(rinsed < covered * .82f, "Moving the water over soaped physical patches gradually removes their foam.");
-            Check(rinsedClean > soapedClean + .025f, "Only the rinse gesture increases cleanliness.");
+            Check(rinsed == 0f, "A short generous rinse removes all foam, including the hidden side and tiny remaining patches.");
+            Check(rinsedClean > .97f, "The broad shower cleans the complete body without aiming at individual dirt specks.");
             experience.EndBathToolGesture(); yield return null;
             Check(!experience.IsWaterRunning && !experience.IsBathToolHeld, "Releasing the shower stops its water immediately.");
             experience.SetInteractionMode("Amassar"); Physics.SyncTransforms();

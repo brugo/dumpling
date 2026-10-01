@@ -129,14 +129,19 @@ namespace MimoGarden
             PetActor replacedMiddle = app.Actor;
             yield return PrepareBirth("Mim", 4); app.ConfirmName(); yield return new WaitForSecondsRealtime(.25f);
             PetActor retainedLast = app.Actor;
-            Check(app.PlaygroundPets.Count == 3, "Three newly created friends fill the group again.");
+            Check(app.PlaygroundPets.Count == 3, "The first three new friends coexist without replacement.");
+            yield return PrepareBirth("Brisa",2); app.ConfirmName(); yield return new WaitForSecondsRealtime(.25f);
+            PetActor extraFirst = app.Actor;
+            yield return PrepareBirth("Mel",6); app.ConfirmName(); yield return new WaitForSecondsRealtime(.25f);
+            PetActor extraLast = app.Actor;
+            Check(app.PlaygroundPets.Count == 5, "The fourth and fifth creations fill the expanded group normally.");
             string[] fullIds = Ids(); string replaceId = replacedMiddle.Data.petId;
             yield return PrepareBirth("Nuvem", 3);
             PetSave draft = app.DraftRecipe;
             byte[] fullFile = File.ReadAllBytes(isolated);
             app.ConfirmName(); yield return null;
-            Check(app.IsFriendDialogOpen && app.IsChoosingReplacement && app.CurrentScreen == "Naming", "Naming a fourth creation opens the replacement chooser before committing it.");
-            Check(Ids().SequenceEqual(fullIds) && SameBytes(fullFile), "Opening the replacement chooser leaves all three saved creations untouched.");
+            Check(app.IsFriendDialogOpen && app.IsChoosingReplacement && app.CurrentScreen == "Naming", "Naming a sixth creation opens the replacement chooser before committing it.");
+            Check(Ids().SequenceEqual(fullIds) && SameBytes(fullFile), "Opening the replacement chooser leaves all five saved creations untouched.");
             RecordDialog("choose-replacement");
             yield return CaptureNativeDialog("android-replacement-chooser.png");
             app.ChooseFriendToReplace(replacedMiddle); yield return null;
@@ -147,13 +152,13 @@ namespace MimoGarden
             Check(Ids().SequenceEqual(fullIds) && SameBytes(fullFile) && SameRecipe(draft, app.DraftRecipe) && app.DraftRecipe.petName == "Nuvem", "Cancelling replacement preserves the entire group, saved bytes and unfinished new recipe and name.");
             if (app.IsFriendDialogOpen) app.CancelFriendDialog();
             app.ConfirmName(); yield return null;
-            Check(app.IsChoosingReplacement, "The same pending fourth recipe can reopen the replacement chooser.");
+            Check(app.IsChoosingReplacement, "The same pending sixth recipe can reopen the replacement chooser.");
             app.ChooseFriendToReplace(replacedMiddle); app.ConfirmFriendRemoval(); yield return new WaitForSecondsRealtime(.35f);
             PetActor newFriend = app.Actor;
-            Check(app.CurrentScreen == "Home" && !app.IsFriendDialogOpen && app.PlaygroundPets.Count == 3 && newFriend.Data.petName == "Nuvem",
+            Check(app.CurrentScreen == "Home" && !app.IsFriendDialogOpen && app.PlaygroundPets.Count == 5 && newFriend.Data.petName == "Nuvem",
                 "Confirming replacement commits the new friend and returns to the playable group.");
-            Check(Ids().SequenceEqual(new[] { retainedFirst.Data.petId, retainedLast.Data.petId, newFriend.Data.petId }) && !Ids().Contains(replaceId),
-                "Only the explicitly chosen non-oldest friend is replaced; the other two keep their creation order.");
+            Check(Ids().SequenceEqual(new[] { retainedFirst.Data.petId, retainedLast.Data.petId, extraFirst.Data.petId, extraLast.Data.petId, newFriend.Data.petId }) && !Ids().Contains(replaceId),
+                "Only the explicitly chosen non-oldest friend is replaced; the other four keep their creation order.");
             Check(app.PlaygroundPets.Contains(retainedFirst) && app.PlaygroundPets.Contains(retainedLast), "Replacement preserves the remaining live actor instances.");
             PetCollection final = PetStorage.LoadCollection();
             Check(final.pets.Select(p => p.petId).SequenceEqual(Ids()) && final.activePetId == newFriend.Data.petId && final.retiredPetIds.Contains(replaceId),

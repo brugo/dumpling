@@ -17,6 +17,7 @@ namespace MimoGarden
             public string version, unityVersion, device, gpu, isolatedSavePath, captureMethod;
             public int width, height;
             public float elapsedSeconds;
+            public float fiveFriendsAverageFps, fiveFriendsMinimumWindowFps, fiveFriendsP95Milliseconds;
             public string[] checks, errors, screenshots, measurements;
         }
 
@@ -29,6 +30,7 @@ namespace MimoGarden
         Camera sceneCamera;
         float started;
         bool finished;
+        float fiveFriendsAverageFps, fiveFriendsMinimumWindowFps, fiveFriendsP95Milliseconds;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Isolate()
@@ -76,8 +78,12 @@ namespace MimoGarden
             yield return Create("Lumi", 1, 2);
             Check(experience.PlaygroundPets.Count == 2 && experience.PlaygroundPets.Contains(original), "A second confirmed creation keeps the first live actor.");
             yield return Create("Pingo", 7, 3);
-            Check(experience.PlaygroundPets.Count == 3 && experience.PlaygroundPets.Contains(original), "A third confirmed creation leaves all three friends together.");
-            CheckVisibleRoster("The first three friends");
+            Check(experience.PlaygroundPets.Count == 3 && experience.PlaygroundPets.Contains(original), "A third confirmed creation leaves all five friends together.");
+            yield return Create("Brisa",4,0);
+            yield return Create("Mel",2,4);
+            Check(experience.PlaygroundPets.Count == 5 && experience.PlaygroundPets.Contains(original), "Five confirmed creations remain together without replacing anyone.");
+            Check(experience.HasThemeParkBackdrop, "The generated theme park image is loaded into the real playground.");
+            CheckVisibleRoster("The first five friends");
             yield return Capture("01-three-creations.png");
             string[] beforeCancel = experience.PlaygroundPets.Select(p => p.Data.petId).ToArray();
             string selectedBeforeCancel = experience.Actor.Data.petId;
@@ -85,16 +91,16 @@ namespace MimoGarden
             yield return MimoRitualCheck.AddAndStir(experience, 0, 5);
             experience.EnterHome(); yield return new WaitForSecondsRealtime(.4f);
             Check(beforeCancel.SequenceEqual(experience.PlaygroundPets.Select(p => p.Data.petId)) && experience.Actor.Data.petId == selectedBeforeCancel,
-                "Leaving an unfinished recipe preserves all three identities and the selected friend.");
+                "Leaving an unfinished recipe preserves all five identities and the selected friend.");
             yield return Create("Nuvem", 3, 1);
             PetActor[] pets = experience.PlaygroundPets.ToArray();
-            Check(pets.Length == 3 && pets.Select(p => p.Data.petName).SequenceEqual(new[] { "Lumi", "Pingo", "Nuvem" }),
-                "Replacing the explicitly chosen oldest friend keeps the other two and the new creation, in creation order.");
+            Check(pets.Length == 5 && pets.Select(p => p.Data.petName).SequenceEqual(new[] { "Lumi", "Pingo", "Brisa", "Mel", "Nuvem" }),
+                "Replacing the explicitly chosen oldest friend keeps the other four and the new creation, in creation order.");
             Check(pets.All(p => p.Data.petId != originalId), "Only the explicitly chosen creation leaves the playable roster.");
-            Check(PetStorage.LoadCollection().pets.Select(p => p.petId).SequenceEqual(pets.Select(p => p.Data.petId)), "The complete three-friend roster survives a disk reload.");
-            CheckVisibleRoster("The latest three friends");
-            if (pets.Length != 3) { Finish(); yield break; }
-            yield return Capture("02-latest-three-playground.png");
+            Check(PetStorage.LoadCollection().pets.Select(p => p.petId).SequenceEqual(pets.Select(p => p.Data.petId)), "The complete five-friend roster survives a disk reload.");
+            CheckVisibleRoster("The latest five friends");
+            if (pets.Length != 5) { Finish(); yield break; }
+            yield return Capture("02-five-friends-theme-park.png");
 
             foreach (PetActor pet in pets)
             {
@@ -114,17 +120,18 @@ namespace MimoGarden
 
             Click("Brincar"); yield return new WaitForSecondsRealtime(.5f);
             CheckVisibleRoster("Returning from each friend's bath");
+            yield return CheckFiveFriendsPerformance();
             experience.SendMessage("SaveCare");
             PetCollection finalCollection = PetStorage.LoadCollection();
-            Check(finalCollection.pets.Count == 3 && finalCollection.activePetId == experience.Actor.Data.petId,
-                "Saving the group retains all three friends and the active selection.");
+            Check(finalCollection.pets.Count == 5 && finalCollection.activePetId == experience.Actor.Data.petId,
+                "Saving the group retains all five friends and the active selection.");
             foreach (PetActor pet in pets)
             {
                 PetSave reloaded = finalCollection.pets.FirstOrDefault(p => p.petId == pet.Data.petId);
                 Check(reloaded != null && reloaded.petName == pet.Data.petName && reloaded.finishIndex == pet.Data.finishIndex && Mathf.Abs(reloaded.cleanliness - pet.Data.cleanliness) < .01f,
                     "The independent identity, material and care state reload correctly for " + pet.Data.petName + ".");
             }
-            yield return Capture("12-three-friends-after-care.png");
+            yield return Capture("12-five-friends-after-care.png");
             Finish();
         }
 
@@ -141,7 +148,7 @@ namespace MimoGarden
             InputField field = FindObjectsByType<InputField>(FindObjectsSortMode.None).FirstOrDefault(f => f.gameObject.activeInHierarchy);
             Check(field, "The visible name field exists for " + name + ".");
             if (field) field.text = name;
-            PetActor replacement = experience.PlaygroundPets.Count == 3 ? experience.PlaygroundPets[0] : null;
+            PetActor replacement = experience.PlaygroundPets.Count == PetStorage.MaxPets ? experience.PlaygroundPets[0] : null;
             experience.ConfirmName(); yield return null;
             if (replacement)
             {
@@ -155,6 +162,54 @@ namespace MimoGarden
                 "Confirmation commits and selects the complete new recipe: " + name + ".");
         }
 
+        IEnumerator CheckFiveFriendsPerformance()
+        {
+            CheckRenderedContactShadows();
+            foreach (PetActor pet in experience.PlaygroundPets) { pet.ClearSoap(); experience.SetPetAction(pet,MimoExperience.PlaygroundAction.Tag); }
+            yield return new WaitForSecondsRealtime(3f);
+            var frames = new List<float>(); float windowSeconds = 0, totalSeconds = 0; int windowFrames = 0;
+            fiveFriendsMinimumWindowFps = float.MaxValue;
+            float until = Time.realtimeSinceStartup + 20f;
+            while (Time.realtimeSinceStartup < until)
+            {
+                yield return null;
+                float dt = Time.unscaledDeltaTime; frames.Add(dt); totalSeconds += dt; windowSeconds += dt; windowFrames++;
+                if (windowSeconds >= 1f) { fiveFriendsMinimumWindowFps = Mathf.Min(fiveFriendsMinimumWindowFps,windowFrames/windowSeconds); windowSeconds = 0; windowFrames = 0; }
+            }
+            frames.Sort(); fiveFriendsAverageFps = frames.Count/Mathf.Max(.001f,totalSeconds);
+            fiveFriendsP95Milliseconds = frames[Mathf.Clamp(Mathf.CeilToInt(frames.Count*.95f)-1,0,frames.Count-1)]*1000;
+            measurements.Add("Five friends playing together: average FPS="+fiveFriendsAverageFps.ToString("F2")+"; minimum 1s window FPS="+fiveFriendsMinimumWindowFps.ToString("F2")+"; p95 frame ms="+fiveFriendsP95Milliseconds.ToString("F2")+".");
+            Check(experience.MobileVisibleContactShadows == 5,"All five moving friends retain their soft contact shadows.");
+            if (Application.isMobilePlatform)
+                Check(fiveFriendsAverageFps >= 30 && fiveFriendsMinimumWindowFps >= 30 && fiveFriendsP95Milliseconds <= 33.334f,"Five friends with shadows stay above 30 FPS throughout the measured physical-tablet windows.");
+            yield return Capture("13-five-playing-with-shadows.png");
+            foreach (PetActor pet in experience.PlaygroundPets) experience.StopPetAction(pet);
+        }
+
+        void CheckRenderedContactShadows()
+        {
+            MeshRenderer[] contacts = FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None)
+                .Where(r => r.gameObject.activeInHierarchy && r.gameObject.name.StartsWith("Mimo soft ground contact ")).ToArray();
+            Texture2D shaded = null, plain = null;
+            try
+            {
+                shaded = MimoRenderCapture.Scene(sceneCamera);
+                foreach (MeshRenderer contact in contacts) contact.enabled = false;
+                plain = MimoRenderCapture.Scene(sceneCamera);
+                Color32[] a = shaded.GetPixels32(), b = plain.GetPixels32(); int darkened = 0;
+                for (int i = 0; i < a.Length; i++)
+                    if (b[i].r+b[i].g+b[i].b-a[i].r-a[i].g-a[i].b >= 12) darkened++;
+                Check(contacts.Length == 5 && darkened > shaded.width*shaded.height*.0005f,
+                    "Five contact shadows visibly darken the rendered park ground ("+darkened+" pixels), beyond merely existing in the scene.");
+                measurements.Add("Visible contact-shadow pixels: "+darkened+" at "+shaded.width+"x"+shaded.height+".");
+            }
+            finally
+            {
+                foreach (MeshRenderer contact in contacts) contact.enabled = true;
+                if (shaded) Destroy(shaded); if (plain) Destroy(plain);
+            }
+        }
+
         void CheckStorageFixtures()
         {
             string savedPath = PetStorage.SavePathOverride;
@@ -164,14 +219,14 @@ namespace MimoGarden
                 var oldest = new PetSave { created = true, petName = "Fixture 0", hunger = .31f, cleanliness = .41f };
                 Check(PetStorage.Save(oldest), "An isolated first creation can be saved.");
                 string firstId = oldest.petId;
-                for (int i = 1; i < 3; i++) Check(PetStorage.Save(new PetSave { created = true, petName = "Fixture " + i, recipeSeed = 8000 + i, hunger = .4f + i * .1f, cleanliness = .3f + i * .1f }), "The storage layer accepts distinct creation " + i + ".");
-                var fourth = new PetSave { created = true, petName = "Fixture 3", recipeSeed = 8003, hunger = .7f, cleanliness = .6f };
+                for (int i = 1; i < PetStorage.MaxPets; i++) Check(PetStorage.Save(new PetSave { created = true, petName = "Fixture " + i, recipeSeed = 8000 + i, hunger = .4f + i * .1f, cleanliness = .3f + i * .1f }), "The storage layer accepts distinct creation " + i + ".");
+                var fourth = new PetSave { created = true, petName = "Fixture 5", recipeSeed = 8005, hunger = .7f, cleanliness = .6f };
                 byte[] fullBefore = File.ReadAllBytes(PetStorage.SavePath);
-                Check(!PetStorage.Save(fourth) && fullBefore.SequenceEqual(File.ReadAllBytes(PetStorage.SavePath)), "A fourth creation without an explicit replacement leaves the full save untouched.");
-                Check(PetStorage.Save(fourth, firstId), "Storage commits the fourth creation only with an explicit replacement ID.");
+                Check(!PetStorage.Save(fourth) && fullBefore.SequenceEqual(File.ReadAllBytes(PetStorage.SavePath)), "A sixth creation without an explicit replacement leaves the full save untouched.");
+                Check(PetStorage.Save(fourth, firstId), "Storage commits the sixth creation only with an explicit replacement ID.");
                 PetCollection collection = PetStorage.LoadCollection();
-                Check(collection.pets.Count == 3 && collection.pets.Select(p => p.petName).SequenceEqual(new[] { "Fixture 1", "Fixture 2", "Fixture 3" }), "Replacing the chosen oldest ID retains the other two complete recipes and the new friend.");
-                Check(collection.pets.Select(p => p.petId).Distinct().Count() == 3 && collection.pets.All(p => !string.IsNullOrWhiteSpace(p.petId)), "Separate creations have stable distinct IDs, even without hand-authored identifiers.");
+                Check(collection.pets.Count == 5 && collection.pets.Select(p => p.petName).SequenceEqual(new[] { "Fixture 1", "Fixture 2", "Fixture 3", "Fixture 4", "Fixture 5" }), "Replacing the chosen oldest ID retains the other four complete recipes and the new friend.");
+                Check(collection.pets.Select(p => p.petId).Distinct().Count() == 5 && collection.pets.All(p => !string.IsNullOrWhiteSpace(p.petId)), "Separate creations have stable distinct IDs, even without hand-authored identifiers.");
                 Check(!PetStorage.Save(oldest) && PetStorage.LoadCollection().pets.All(p => p.petId != firstId), "A late save from an evicted actor cannot resurrect it or evict a newer friend.");
                 string[] order = collection.pets.Select(p => p.petId).ToArray();
                 collection.pets[0].hunger = .27f; collection.activePetId = collection.pets[0].petId;
@@ -373,11 +428,11 @@ namespace MimoGarden
         void CheckVisibleRoster(string context)
         {
             Plane[] planes = GeometryUtility.CalculateFrustumPlanes(sceneCamera);
-            Check(experience.ActiveEnvironment == "Play" && experience.PlaygroundPets.Count == 3, context + ": all three belong to the playground.");
+            Check(experience.ActiveEnvironment == "Play" && experience.PlaygroundPets.Count == 5, context + ": all five belong to the playground.");
             foreach (PetActor pet in experience.PlaygroundPets)
                 Check(pet.gameObject.activeInHierarchy && pet.VisibleBounds.size.y > .5f && GeometryUtility.TestPlanesAABB(planes, pet.VisibleBounds), context + ": " + pet.Data.petName + " is rendered inside the camera view.");
-            Check(experience.PlaygroundPets.Select(p => p.Data.petId).Distinct().Count() == 3, context + ": actors refer to three distinct persistent creations.");
-            if (MimoPerformance.Lightweight) Check(experience.MobileVisibleContactShadows == 3, context + ": all three mobile friends have individual ground contact shadows.");
+            Check(experience.PlaygroundPets.Select(p => p.Data.petId).Distinct().Count() == 5, context + ": actors refer to five distinct persistent creations.");
+            if (MimoPerformance.Lightweight) Check(experience.MobileVisibleContactShadows == 5, context + ": all five mobile friends have individual ground contact shadows.");
         }
         void Click(string label)
         {
@@ -402,6 +457,7 @@ namespace MimoGarden
                 version = Application.version, unityVersion = Application.unityVersion, device = SystemInfo.deviceModel, gpu = SystemInfo.graphicsDeviceName,
                 isolatedSavePath = isolatedPath, captureMethod = "URP SingleCameraRequest; real scene without overlay UI", width = Screen.width, height = Screen.height,
                 elapsedSeconds = Time.realtimeSinceStartup - started, checks = checks.ToArray(), errors = errors.ToArray(), screenshots = screenshots.ToArray(), measurements = measurements.ToArray() };
+            report.fiveFriendsAverageFps = fiveFriendsAverageFps; report.fiveFriendsMinimumWindowFps = fiveFriendsMinimumWindowFps; report.fiveFriendsP95Milliseconds = fiveFriendsP95Milliseconds;
             File.WriteAllText(Path.Combine(output, "playground-checks.json"), JsonUtility.ToJson(report, true));
             Debug.Log("MIMO_PLAYGROUND " + (report.passed ? "PASS" : "FAIL") + " checks=" + checks.Count + " errors=" + errors.Count);
             Application.Quit(report.passed ? 0 : 1);

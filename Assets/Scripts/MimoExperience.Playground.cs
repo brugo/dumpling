@@ -144,6 +144,12 @@ namespace MimoGarden
                 sceneCamera.transform.LookAt(new Vector3(0, .75f, 1.3f));
                 sceneCamera.fieldOfView = 47f;
             }
+            else if (care == Care.Bath)
+            {
+                sceneCamera.transform.position = new Vector3(0,4.4f,-8.8f);
+                sceneCamera.transform.LookAt(new Vector3(0,1.2f,.4f));
+                sceneCamera.fieldOfView = 40f;
+            }
             else
             {
                 sceneCamera.transform.position = new Vector3(0, 5.5f, -11.5f);
@@ -279,6 +285,7 @@ namespace MimoGarden
 
         void TickPlayground()
         {
+            LayoutThemeParkBackdrop();
             if (IsFriendDialogOpen || place != Place.Home || care != Care.Play) return;
             float now = Time.time;
             foreach (PetActor pet in playgroundPets)
@@ -326,8 +333,8 @@ namespace MimoGarden
 
         void BuildFriendPicker()
         {
-            RailLabel("AMIGOS  " + playgroundPets.Count + "/3", 10, 26, 15, true);
-            float width = (RailWidth - 32) / 3f;
+            RailLabel("AMIGOS  " + playgroundPets.Count + "/" + PetStorage.MaxPets, 10, 26, 15, true);
+            float width = (RailWidth - 24 - (PetStorage.MaxPets - 1) * 4) / PetStorage.MaxPets;
             for (int i = 0; i < playgroundPets.Count; i++)
             {
                 PetActor friend = playgroundPets[i];
@@ -355,7 +362,7 @@ namespace MimoGarden
             PictureCard("Descansar", 2, 3, 42, Hex("EEE5FC"), () => { StopPetAction(actor); UpdateFriendHeading(); BuildHomeUI(); });
             ScrollRailLabel("Leve os amigos aos brinquedos do jardim.", 169, 54, 16);
             PictureHands(240);
-            ScrollRailLabel("Até 3 amigos para inventar histórias.", 397, 42, 15);
+            ScrollRailLabel("Até 5 amigos para inventar histórias.", 397, 42, 15);
             RailAction("Criar outro amigo", EnterLaboratory); PictureNavigation();
             FinishSidebarScroll();
         }

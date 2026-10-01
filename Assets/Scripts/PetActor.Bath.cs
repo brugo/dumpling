@@ -5,18 +5,15 @@ namespace MimoGarden
 {
     public sealed partial class PetActor
     {
-        const int SoapSize = 64, SoapBeads = 32;
+        const int SoapSize = 64;
         Texture2D soapMask;
         float[] soapValues;
         Color32[] soapPixels;
         float soapTotal, soapUploadAt;
         bool soapDirty;
-        Mesh soapBeadMesh;
         Transform soapBeadRoot;
-        MeshRenderer soapBeadRenderer;
-        Vector3[] soapBeadCenters, soapBeadNormals, soapBeadVertices, soapUnitVertices;
-        Vector2[] soapBeadUV;
-        float soapBeadRadius;
+        MimoBubbleSurface bubbleSurface;
+        public int SoapBubbleCount => MimoBubbleSurface.BubbleCount;
         public float SoapCoverage => soapValues == null ? 0 : Mathf.Clamp01(soapTotal / soapValues.Length);
         public Texture2D SoapMaskTexture => soapMask;
 
@@ -34,14 +31,16 @@ namespace MimoGarden
             Material bodyMaterial = _body.sharedMaterial;
             bodyMaterial.SetTexture("_SoapMask", soapMask);
             bodyMaterial.SetColor("_SoapColor", new Color(.96f, .985f, 1f, 1));
-            bodyMaterial.SetFloat("_SoapAmount", 1f);
+            bodyMaterial.SetFloat("_SoapAmount", .72f);
             ConfigureFinishMasks();
+            bodyMaterial.SetFloat("_SoapAmount", .42f);
         }
 
         public bool SoapAt(RaycastHit hit, float strength)
         {
             if (hit.collider != _bodyCollider || strength <= 0 || !soapMask) return false;
-            PaintSoap(hit.textureCoord, .16f, strength * 5.5f);
+            PaintSoap(hit.textureCoord, .22f, strength * 8f);
+            SpreadSoap(strength * .55f);
             SetExpression("giggle");
             return true;
         }
@@ -49,9 +48,11 @@ namespace MimoGarden
         public bool RinseAt(RaycastHit hit, float strength)
         {
             if (hit.collider != _bodyCollider || strength <= 0 || !soapMask) return false;
-            PaintSoap(hit.textureCoord, .135f, -strength * 3.3f);
-            // Dirt remains under the foam until the water actually reaches this UV patch.
-            WashAt(hit, strength * .7f);
+            PaintSoap(hit.textureCoord, .30f, -strength * 8f);
+            // Abundant running water reaches around the body, including seams and the far side.
+            SpreadSoap(-strength * .8f);
+            WashWholeBody(strength);
+            if (SoapCoverage < .012f) ClearSoap();
             SetExpression("love");
             return true;
         }
@@ -68,6 +69,33 @@ namespace MimoGarden
             if (soapValues == null) return;
             System.Array.Clear(soapValues, 0, soapValues.Length); System.Array.Clear(soapPixels, 0, soapPixels.Length);
             soapTotal = 0; soapDirty = true; soapUploadAt = 0;
+        }
+
+        void SpreadSoap(float amount)
+        {
+            soapTotal = 0;
+            for (int i = 0; i < soapValues.Length; i++)
+            {
+                float value = Mathf.Clamp01(soapValues[i] + amount);
+                soapValues[i] = value; soapTotal += value;
+                byte mask = (byte)Mathf.RoundToInt(value * 255f); soapPixels[i] = new Color32(mask, mask, mask, 255);
+            }
+            soapDirty = true;
+        }
+
+        void WashWholeBody(float strength)
+        {
+            if (_dirt == null || Data == null) return;
+            _dirtTotal = 0;
+            Color pearl = Palette[Data.colorIndex], soil = new Color(.44f, .25f, .18f);
+            for (int i = 0; i < _dirt.Length; i++)
+            {
+                _dirt[i] = Mathf.Max(0, _dirt[i] - _dirtPattern[i] * strength * .9f);
+                _dirtTotal += _dirt[i]; _pixels[i] = SkinPixel(pearl, soil, _dirt[i]);
+            }
+            Data.cleanliness = Mathf.Clamp01(1f - _dirtTotal / Mathf.Max(1f, _dirtCapacity));
+            _textureDirty = true;
+            if (Time.time >= _nextWashEvent) { _nextWashEvent = Time.time + .3f; StateChanged?.Invoke(); }
         }
 
         void PaintSoap(Vector2 uv, float radius, float amount)
@@ -95,68 +123,25 @@ namespace MimoGarden
             if (!soapDirty || !soapMask || Time.unscaledTime < soapUploadAt) return;
             soapUploadAt = Time.unscaledTime + .1f; soapDirty = false;
             soapMask.SetPixels32(soapPixels); soapMask.Apply(false, false);
-            if (!soapBeadMesh) return;
-            soapBeadRenderer.enabled = SoapCoverage > .0005f;
-            for (int bead = 0; bead < SoapBeads; bead++)
-            {
-                float amount = Mathf.SmoothStep(0, 1, Mathf.Clamp01((SoapAtUV(soapBeadUV[bead]) - .15f) / .65f));
-                float radius = soapBeadRadius * (1f + (bead % 3) * .22f) * amount;
-                Vector3 center = soapBeadCenters[bead] + soapBeadNormals[bead] * radius * .48f;
-                for (int v = 0; v < soapUnitVertices.Length; v++) soapBeadVertices[bead * soapUnitVertices.Length + v] = center + soapUnitVertices[v] * radius;
-            }
-            soapBeadMesh.vertices = soapBeadVertices;
+            if (bubbleSurface) bubbleSurface.SetCoverage(SoapCoverage);
         }
 
         void BuildSoapBeads()
         {
-            MeshFilter bodyFilter = _body.GetComponent<MeshFilter>(); Mesh source = _bakedColliderMesh ? _bakedColliderMesh : bodyFilter ? bodyFilter.sharedMesh : null;
-            if (!source) return;
-            Vector3[] bodyVertices = source.vertices, bodyNormals = source.normals; Vector2[] bodyUV = source.uv;
-            if (bodyUV.Length != bodyVertices.Length) return;
-            soapBeadCenters = new Vector3[SoapBeads]; soapBeadNormals = new Vector3[SoapBeads]; soapBeadUV = new Vector2[SoapBeads];
-            var best = new float[SoapBeads]; for (int i = 0; i < best.Length; i++) best[i] = float.MaxValue;
-            for (int i = 0; i < bodyVertices.Length; i++)
-            {
-                Vector2 uv = bodyUV[i]; int column = Mathf.Clamp((int)(uv.x * 8), 0, 7), row = Mathf.Clamp((int)((uv.y - .1f) / .8f * 4), 0, 3), bead = row * 8 + column;
-                Vector2 target = new Vector2((column + .5f) / 8f, .1f + (row + .5f) * .2f); float distance = (uv - target).sqrMagnitude;
-                if (distance >= best[bead]) continue;
-                best[bead] = distance; soapBeadCenters[bead] = bodyVertices[i]; soapBeadNormals[bead] = bodyNormals.Length == bodyVertices.Length ? bodyNormals[i].normalized : (bodyVertices[i] - source.bounds.center).normalized; soapBeadUV[bead] = uv;
-            }
-            const int longitude = 8, latitude = 5, beadVertices = (longitude + 1) * (latitude + 1);
-            soapUnitVertices = new Vector3[beadVertices]; soapBeadVertices = new Vector3[SoapBeads * beadVertices];
-            var normals = new Vector3[soapBeadVertices.Length]; var triangles = new int[SoapBeads * longitude * (latitude - 1) * 6]; int cursor = 0;
-            for (int y = 0; y <= latitude; y++)
-                for (int x = 0; x <= longitude; x++)
-                {
-                    float phi = y * Mathf.PI / latitude, theta = x * Mathf.PI * 2f / longitude;
-                    soapUnitVertices[y * (longitude + 1) + x] = new Vector3(Mathf.Sin(phi) * Mathf.Cos(theta), Mathf.Cos(phi), Mathf.Sin(phi) * Mathf.Sin(theta));
-                }
-            for (int bead = 0; bead < SoapBeads; bead++)
-            {
-                int offset = bead * beadVertices;
-                for (int i = 0; i < beadVertices; i++) { soapBeadVertices[offset + i] = soapBeadCenters[bead]; normals[offset + i] = soapUnitVertices[i]; }
-                for (int y = 0; y < latitude; y++)
-                    for (int x = 0; x < longitude; x++)
-                    {
-                        int a = offset + y * (longitude + 1) + x, b = a + 1, c = a + longitude + 1, d = c + 1;
-                        if (y > 0) { triangles[cursor++] = a; triangles[cursor++] = b; triangles[cursor++] = c; }
-                        if (y < latitude - 1) { triangles[cursor++] = b; triangles[cursor++] = d; triangles[cursor++] = c; }
-                    }
-            }
-            soapBeadRadius = source.bounds.size.y * .035f;
-            soapBeadMesh = new Mesh { name = "Mimo soap bubbles — one light mesh", vertices = soapBeadVertices, normals = normals, triangles = triangles };
-            Bounds bounds = source.bounds; bounds.Expand(soapBeadRadius * 5); soapBeadMesh.bounds = bounds; soapBeadMesh.MarkDynamic();
-            soapBeadRoot = new GameObject("Persistent soap beads").transform; soapBeadRoot.SetParent(_body.transform, false);
-            soapBeadRoot.gameObject.AddComponent<MeshFilter>().sharedMesh = soapBeadMesh;
-            soapBeadRenderer = soapBeadRoot.gameObject.AddComponent<MeshRenderer>(); soapBeadRenderer.sharedMaterial = Material("Mimo soap cream bubbles", new Color(.91f, .98f, 1f), .75f);
-            soapBeadRenderer.shadowCastingMode = ShadowCastingMode.Off; soapBeadRenderer.receiveShadows = false; soapBeadRenderer.enabled = false;
+            MeshFilter filter = _body.GetComponent<MeshFilter>();
+            Mesh surface = _bakedColliderMesh ? _bakedColliderMesh : filter ? filter.sharedMesh : null;
+            if (!surface) return;
+            soapBeadRoot = new GameObject("Dense iridescent soap foam").transform;
+            soapBeadRoot.SetParent(_body.transform, false);
+            bubbleSurface = soapBeadRoot.gameObject.AddComponent<MimoBubbleSurface>();
+            bubbleSurface.Initialize(surface, soapMask);
         }
 
         void ReleaseSoapLayer()
         {
-            if (soapMask) Destroy(soapMask); if (soapBeadRoot) Destroy(soapBeadRoot.gameObject); if (soapBeadMesh) Destroy(soapBeadMesh);
-            soapMask = null; soapBeadMesh = null; soapBeadRoot = null; soapBeadRenderer = null;
-            soapValues = null; soapPixels = null; soapBeadCenters = soapBeadNormals = soapBeadVertices = soapUnitVertices = null; soapBeadUV = null;
+            if (soapMask) Destroy(soapMask); if (soapBeadRoot) Destroy(soapBeadRoot.gameObject);
+            soapMask = null; soapBeadRoot = null; bubbleSurface = null;
+            soapValues = null; soapPixels = null;
             soapTotal = 0; soapDirty = false; soapUploadAt = 0;
         }
     }

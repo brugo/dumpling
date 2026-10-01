@@ -125,6 +125,7 @@ namespace MimoGarden
 
         void BuildMobileContactShadow()
         {
+            if (mobileContactMaterial) return;
             Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
             if (!shader) return;
             mobileContactTexture = new Texture2D(64, 64, TextureFormat.RGBA32, false, true) { name = "Mimo soft contact gradient", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
@@ -133,8 +134,8 @@ namespace MimoGarden
                 for (int x = 0; x < 64; x++)
                 {
                     float dx = (x + .5f - 32f) / 32f, dy = (y + .5f - 32f) / 32f;
-                    float r = Mathf.Sqrt(dx * dx + dy * dy), softness = Mathf.Clamp01(1f - r);
-                    float alpha = softness * softness * (3f - 2f * softness);
+                    float r2 = dx * dx + dy * dy;
+                    float alpha = (.72f * Mathf.Exp(-r2*3.2f) + .28f*Mathf.Exp(-r2*12f)) * Mathf.Clamp01((1f-r2)*5f);
                     pixels[y * 64 + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
                 }
             mobileContactTexture.SetPixels32(pixels); mobileContactTexture.Apply(false, true);
@@ -145,7 +146,7 @@ namespace MimoGarden
             mobileContactMaterial.SetFloat("_ZWrite", 0); mobileContactMaterial.SetFloat("_Cull", (float)CullMode.Off);
             mobileContactMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); mobileContactMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON"); mobileContactMaterial.DisableKeyword("_ALPHATEST_ON");
             mobileContactMaterial.SetTexture("_BaseMap", mobileContactTexture);
-            mobileContactMaterial.SetColor("_BaseColor", new Color(.19f, .13f, .26f, .3f));
+            mobileContactMaterial.SetColor("_BaseColor", new Color(.12f,.15f,.13f,.50f));
             var mesh = new Mesh
             {
                 name = "Mimo contact shadow quad",
@@ -156,7 +157,7 @@ namespace MimoGarden
             };
             mesh.RecalculateBounds(); mobileWorldMeshes.Add(mesh);
             // These pooled quads live outside room hierarchies and their static batches.
-            // Slot zero belongs to the recipe preview; the other three follow the live roster.
+            // Slot zero belongs to the recipe preview; the other five follow the live roster.
             for (int i = 0; i < mobileContacts.Length; i++)
             {
                 Transform contact = Group("Mimo soft ground contact " + i);
@@ -197,8 +198,9 @@ namespace MimoGarden
             contact.transform.position = position;
             contact.transform.rotation = Quaternion.Euler(0, petTransform.eulerAngles.y, 0);
             float expansion = 1f + Mathf.Min(lift, 1.4f) * .17f;
-            contact.transform.localScale = new Vector3(2.8f * Mathf.Abs(scale.x) * expansion, 1, 2.04f * Mathf.Abs(scale.z) * expansion);
-            contact.properties.SetColor(MobileContactColor, new Color(.19f, .13f, .26f, .30f / (1f + lift * 1.5f)));
+            // The soft edge must extend beyond the body silhouette to remain visible from the high park camera.
+            contact.transform.localScale = new Vector3(4.6f*Mathf.Abs(scale.x)*expansion,1,3.5f*Mathf.Abs(scale.z)*expansion);
+            contact.properties.SetColor(MobileContactColor, new Color(.12f,.15f,.13f,.50f/(1f+lift*1.35f)));
             contact.renderer.SetPropertyBlock(contact.properties);
         }
 

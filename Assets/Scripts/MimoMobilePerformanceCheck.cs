@@ -100,7 +100,7 @@ namespace MimoGarden
             Check(Path.GetDirectoryName(Path.GetFullPath(PetStorage.SavePath)) == Path.GetFullPath(outputDirectory),
                 "The test save was isolated before scene startup.");
             Check(MimoPerformance.Lightweight, "The lightweight rendering profile is active.");
-            Check(Application.targetFrameRate == 30, "The lightweight profile targets 30 frames per second.");
+            Check(Application.targetFrameRate >= 30, "The lightweight profile allows headroom above the 30 FPS floor.");
             if (!experience || !sceneCamera) { Finish(); yield break; }
 
             UniversalRenderPipelineAsset pipeline = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;

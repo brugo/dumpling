@@ -1,6 +1,18 @@
 # Mimo — meu pequeno mundo
 
-Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.5.4**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
+Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.5.5**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
+
+## Banho de bolhas e parque temático — 0.5.5
+
+A esponja espalha espuma por todo o corpo. São **3.072 bolhas** de vários tamanhos, com película transparente, reflexos e bordas iridescentes. A espuma continua presente ao soltar a esponja; ensaboar não remove a sujeira. A câmera do banho está mais próxima.
+
+O chuveirinho tem um **cabo comprido**, com a saída de água afastada do ponto de toque. A ducha larga produz água transparente em movimento, gotas e respingos. Leve essa chuva até o corpo; ela alcança uma área ampla e escorre também para o outro lado. Poucos segundos de enxágue removem a espuma inteira, incluindo os pequenos resíduos.
+
+O parque reúne **até cinco amigos**, cada um com sua aparência, cuidados e brincadeiras. Ao confirmar a sexta criação, você escolhe qual dos cinco amigos substituir e confirma a troca. Os amigos existentes são preservados pela atualização.
+
+A nova imagem de parque temático foi criada no gerador de imagens integrado do ChatGPT e incorporada em `Assets/Resources/Environment/MimoThemePark.png`; o prompt fica no arquivo vizinho `ImageGen-park-prompt.txt`. Os brinquedos continuam sendo objetos 3D interativos. Sombras suaves de contato acompanham cada amigo, ficando mais difusas quando ele pula. Cada sombra usa apenas dois triângulos e uma textura compartilhada.
+
+O perfil móvel permite até 60 FPS e ajusta a resolução do cenário para manter margem sobre a meta mínima de 30 FPS. A interface permanece na resolução nativa. Resultados medidos, capturas e limites da verificação ficam no [relatório da 0.5.5](../MimoGardenPreview/0.5.5/VALIDACAO.md).
 
 ## Mistura com movimentos livres — 0.5.4
 
@@ -48,13 +60,13 @@ O parquinho ganhou caminhos, árvores, canteiros, bandeirinhas e móveis. Cozinh
 
 A exclusão remove somente o amigo escolhido. Os outros continuam com sua aparência e seus cuidados. Se o último amigo for excluído, o jogo abre o ateliê para criar outro.
 
-Para guardar uma quarta criação, termine a receita e o nome e toque em **Levar para casa**. Escolha qual dos três amigos dará lugar ao novo e confirme. Cancelar a escolha ou a confirmação mantém os amigos salvos e a receita com o nome digitado, permitindo decidir depois.
+Para guardar uma sexta criação, termine a receita e o nome e toque em **Levar para casa**. Escolha qual dos cinco amigos dará lugar ao novo e confirme. Cancelar a escolha ou a confirmação mantém os amigos salvos e a receita com o nome digitado, permitindo decidir depois.
 
 ## Abrir
 
 Execute `Abrir-no-Unity.cmd` nesta pasta. A cena é `Assets/Scenes/MimoGarden.unity`. Pressione Play no Unity para começar. O cenário e a interface são construídos ao entrar em Play.
 
-A atualização **0.5.1** acrescenta exclusão individual e escolha de substituição ao parquinho introduzido na 0.5.0, mantendo os seis materiais refeitos na 0.4.1. A versão Windows e o APK ficam nas pastas de entrega abaixo. Os relatórios da [validação do parquinho 0.5.0](../MimoGardenPreview/0.5.0/VALIDACAO.md) e da [validação Android 0.5.0](../MimoGardenAndroid/Validacao-0.5.0/VALIDACAO.md) são históricos e não confirmam a validação ou instalação da 0.5.1.
+A atualização **0.5.5** inclui o banho de bolhas, ducha maior, cinco amigos e parque temático com sombras suaves. A versão Windows e o APK ficam nas pastas de entrega abaixo. Resultados no [relatório da 0.5.5](../MimoGardenPreview/0.5.5/VALIDACAO.md); os relatórios anteriores são históricos.
 
 O destino Windows é a pasta vizinha `MimoGardenPlayable`; abra `MimoGarden.exe` e mantenha o executável e sua pasta de dados juntos. O destino Android é [MimoGardenAndroid/MimoGarden.apk](../MimoGardenAndroid/MimoGarden.apk), com instruções no [guia Android](../MimoGardenAndroid/LEIA-ME.md).
 

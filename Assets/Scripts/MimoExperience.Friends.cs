@@ -29,7 +29,7 @@ namespace MimoGarden
             if (place != Place.Naming || draft == null || playgroundPets.Count < PetStorage.MaxPets) return;
             replacementDialog = true; pendingRemovalPetId = null;
             if (nameInput) nameInput.DeactivateInputField();
-            RectTransform panel = CreateFriendDialog(500);
+            RectTransform panel = CreateFriendDialog(248 + playgroundPets.Count * 72);
             FriendDialogLabel(panel, "O parquinho está cheio", 24, 48, 28, true);
             FriendDialogLabel(panel, "Escolha qual amigo substituir pelo novo.\nNinguém sai até você confirmar.", 80, 56, 19);
             for (int i = 0; i < playgroundPets.Count; i++)
@@ -39,15 +39,15 @@ namespace MimoGarden
                 option.gameObject.name = "Substituir amigo " + friend.Data.petId;
                 RectTransform row = (RectTransform)option.transform;
                 row.anchorMin = Vector2.up; row.anchorMax = Vector2.one; row.pivot = Vector2.up;
-                row.offsetMin = new Vector2(24, -148 - i * 88 - 78); row.offsetMax = new Vector2(-24, -148 - i * 88);
-                DrawFriendPortrait(row, friend.Data, new Vector2(48, -39), 52);
+                row.offsetMin = new Vector2(24, -148 - i * 72 - 64); row.offsetMax = new Vector2(-24, -148 - i * 72);
+                DrawFriendPortrait(row, friend.Data, new Vector2(48, -32), 44);
                 Text name = Label((i + 1) + " · " + friend.Data.petName, row, 22, ink, FontStyle.Bold);
                 name.rectTransform.anchorMin = Vector2.up; name.rectTransform.anchorMax = Vector2.one; name.rectTransform.pivot = Vector2.up;
                 name.rectTransform.offsetMin = new Vector2(91, -41); name.rectTransform.offsetMax = new Vector2(-14, -9);
                 name.resizeTextForBestFit = true; name.resizeTextMinSize = 16; name.resizeTextMaxSize = 22;
                 Text detail = Label(FriendDescription(friend.Data), row, 15, muted);
                 detail.rectTransform.anchorMin = Vector2.up; detail.rectTransform.anchorMax = Vector2.one; detail.rectTransform.pivot = Vector2.up;
-                detail.rectTransform.offsetMin = new Vector2(91, -70); detail.rectTransform.offsetMax = new Vector2(-14, -42);
+                detail.rectTransform.offsetMin = new Vector2(91, -61); detail.rectTransform.offsetMax = new Vector2(-14, -38);
             }
             Button cancel = FriendDialogButton(panel, "Voltar sem trocar", Hex("E6E9F1"), CancelFriendDialog, false, true);
             FocusDialogCancel(cancel);

@@ -45,10 +45,10 @@ namespace MimoGarden
         public List<string> retiredPetIds = new List<string>();
     }
 
-    /// <summary>Up to three local creations, with explicit removal and migration from the original single-pet save.</summary>
+    /// <summary>Up to five local creations, with explicit removal and migration from the original single-pet save.</summary>
     public static class PetStorage
     {
-        public const int MaxPets = 3;
+        public const int MaxPets = 5;
         /// <summary>Allows isolated validation without touching the child's existing creation.</summary>
         public static string SavePathOverride { get; set; }
         public static string SavePath => !string.IsNullOrWhiteSpace(SavePathOverride) ? SavePathOverride :

@@ -41,6 +41,7 @@ namespace MimoGarden
             Rect area = Screen.safeArea;
             float gameWidth = Mathf.Max(Screen.width * .6f, area.xMax - railPixels);
             sceneCamera.rect = new Rect(0, 0, gameWidth / Screen.width, 1);
+            LayoutThemeParkBackdrop();
             toast.anchorMin = toast.anchorMax = new Vector2(gameWidth / Screen.width * .5f, 0);
             toast.pivot = new Vector2(.5f, 0); toast.anchoredPosition = new Vector2(0, 22);
             toast.sizeDelta = new Vector2(450, 42); toastText.fontSize = 14;
@@ -150,7 +151,7 @@ namespace MimoGarden
             nameInput.textComponent = text; nameInput.placeholder = placeholder; nameInput.characterLimit = 20;
             nameInput.lineType = InputField.LineType.SingleLine; nameInput.text = string.IsNullOrWhiteSpace(draft.petName) ? "Mimo" : draft.petName;
             nameInput.selectionColor = new Color(.66f, .54f, .78f, .28f); nameInput.caretColor = ink;
-            ScrollRailLabel(playgroundPets.Count >= 3 ? "O parquinho tem 3 amigos. Você vai escolher quem substituir." : "Mais um amigo para brincar no parquinho.", 242, 84, 18);
+            ScrollRailLabel(playgroundPets.Count >= PetStorage.MaxPets ? "O parquinho tem 5 amigos. Você vai escolher quem substituir." : "Mais um amigo para brincar no parquinho.", 242, 84, 18);
             RailAction("Levar para casa", ConfirmName);
             FinishSidebarScroll();
             Toast("Ele abriu os olhinhos para conhecer você.", 4f);
