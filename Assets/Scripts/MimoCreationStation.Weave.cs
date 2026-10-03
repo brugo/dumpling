@@ -13,6 +13,8 @@ namespace MimoGarden
             if (wovenBamboo) return wovenBamboo;
             wovenBamboo = new Material(Resources.Load<Shader>("Shaders/MimoWovenBamboo")) { name = "Continuous woven bamboo ribbons" };
             wovenBamboo.SetColor("_BaseColor", C("DCC39C"));
+            Texture2D grain = Resources.Load<Texture2D>("Textures/BambooGrain");
+            if (grain) { wovenBamboo.SetTexture("_BaseMap", grain); wovenBamboo.SetFloat("_GrainStrength", .60f); }
             materials.Add(wovenBamboo.name, wovenBamboo);
             return wovenBamboo;
         }
@@ -68,9 +70,9 @@ namespace MimoGarden
             {
                 int s = stake;
                 float centerAngle = s * Mathf.PI * 2 / uprights + (twin == 0 ? -.014f : .014f);
-                BambooRibbon(parent, "Paired upright bamboo reed", rows * 6, .60f, (t,v) =>
+                BambooRibbon(parent, "Paired upright bamboo reed", rows * 6, .535f, (t,v) =>
                 {
-                    float y = .185f + t * .60f;
+                    float y = .185f + t * .535f;
                     float angle = centerAngle + v * .010f;
                     float wave = -Mathf.Cos((y - start) / pitch * Mathf.PI + s * Mathf.PI);
                     float radius = WallRadius(y) + .024f + wave * .013f + .004f * (1 - v * v);

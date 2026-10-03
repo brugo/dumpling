@@ -313,7 +313,8 @@ namespace MimoGarden
             BakeParts(basket);
 
             lid = Group("Bamboo lid with continuous basketweave", transform);
-            Mesh cover = Lathe("Smooth domed bamboo cover", new[] { new Vector2(0, -.01f), new Vector2(1.18f, -.01f), new Vector2(1.23f, .025f), new Vector2(1.19f, .085f), new Vector2(.9f, .13f), new Vector2(.4f, .175f), new Vector2(0, .19f) }, 64);
+            // Support the lowest woven ribbons so grazing views cannot see through beneath the weave.
+            Mesh cover = Lathe("Smooth domed bamboo cover", new[] { new Vector2(0, -.01f), new Vector2(1.18f, -.01f), new Vector2(1.23f, .025f), new Vector2(1.19f, .147f), new Vector2(.9f, .169f), new Vector2(.4f, .1955f), new Vector2(0, .202f) }, 64);
             Part("Domed bamboo cover", lid, cover, Vector3.zero, Vector3.one, bamboo);
             Part("Lid bound edge", lid, ringMesh, Vector3.zero, new Vector3(1.23f, 2.1f, 1.23f), dark);
             BuildWovenDisk(lid, .157f, 1.16f, true);
@@ -438,8 +439,13 @@ namespace MimoGarden
             Shader shader = Shader.Find("Universal Render Pipeline/Simple Lit");
             if (!shader) shader = Shader.Find("Universal Render Pipeline/Lit");
             if (key == "Bamboo woven fiber" || key == "Honey bamboo" || key == "Bamboo golden weave" || key == "Caramel bindings")
-                shader = Resources.Load<Shader>("Shaders/MimoBamboo") ?? shader;
+                shader = Resources.Load<Shader>("Shaders/MimoBoundBamboo") ?? shader;
             material = new Material(shader) { name = key }; SetColor(material, color);
+            if (shader.name == "MimoGarden/BoundBamboo")
+            {
+                Texture2D grain = Resources.Load<Texture2D>("Textures/BambooGrain");
+                if (grain) { material.SetTexture("_BaseMap", grain); material.SetFloat("_GrainStrength", .75f); }
+            }
             if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", smooth);
             materials.Add(key, material); return material;
         }
@@ -487,16 +493,18 @@ namespace MimoGarden
         {
             const int columns = 16, rows = 8;
             var vertices = new Vector3[(columns + 1) * (rows + 1)]; var triangles = new List<int>();
+            var uv = new Vector2[vertices.Length];
             for (int y = 0; y <= rows; y++) for (int x = 0; x <= columns; x++)
             {
                 int i = y * (columns + 1) + x; float a = x * Mathf.PI * 2 / columns, b = y * Mathf.PI / rows;
                 vertices[i] = new Vector3(Mathf.Cos(a) * Mathf.Sin(b), Mathf.Cos(b), Mathf.Sin(a) * Mathf.Sin(b)) * .5f;
+                uv[i] = new Vector2((float)x / columns * 2f, (float)y / rows * .25f);
                 if (x == columns || y == rows) continue;
                 int below = i + columns + 1;
                 if (y > 0) triangles.AddRange(new[] { i, i + 1, below });
                 if (y < rows - 1) triangles.AddRange(new[] { i + 1, below + 1, below });
             }
-            return Mesh("Shared workshop sphere", vertices, triangles.ToArray());
+            Mesh sphere = Mesh("Shared workshop sphere", vertices, triangles.ToArray()); sphere.uv = uv; return sphere;
         }
         Mesh MakeCylinder() { return Lathe("Shared workshop cylinder", new[] { new Vector2(0, -.5f), new Vector2(.5f, -.5f), new Vector2(.5f, .5f), new Vector2(0, .5f) }, 24); }
         Mesh MakeCube()
@@ -504,38 +512,46 @@ namespace MimoGarden
             Vector3[] corners = { new Vector3(-.5f,-.5f,-.5f), new Vector3(.5f,-.5f,-.5f), new Vector3(.5f,.5f,-.5f), new Vector3(-.5f,.5f,-.5f), new Vector3(-.5f,-.5f,.5f), new Vector3(.5f,-.5f,.5f), new Vector3(.5f,.5f,.5f), new Vector3(-.5f,.5f,.5f) };
             int[] faces = { 0,3,2,1, 5,6,7,4, 4,7,3,0, 1,2,6,5, 3,7,6,2, 4,0,1,5 };
             var vertices = new Vector3[24]; var triangles = new int[36];
+            var uv = new Vector2[24];
             for (int f = 0; f < 6; f++)
             {
                 int j = f * 4, t = f * 6; for (int k = 0; k < 4; k++) vertices[j + k] = corners[faces[j + k]];
+                uv[j] = Vector2.zero; uv[j + 1] = new Vector2(1, 0); uv[j + 2] = new Vector2(1, .16f); uv[j + 3] = new Vector2(0, .16f);
                 triangles[t] = j; triangles[t + 1] = j + 1; triangles[t + 2] = j + 2; triangles[t + 3] = j; triangles[t + 4] = j + 2; triangles[t + 5] = j + 3;
             }
-            return Mesh("Shared workshop cube", vertices, triangles);
+            Mesh cube = Mesh("Shared workshop cube", vertices, triangles); cube.uv = uv; return cube;
         }
         Mesh Lathe(string name, Vector2[] profile, int segments)
         {
             var vertices = new Vector3[(segments + 1) * profile.Length]; var indices = new List<int>();
+            var uv = new Vector2[vertices.Length];
+            var profileDistance = new float[profile.Length];
+            for (int p = 1; p < profile.Length; p++) profileDistance[p] = profileDistance[p - 1] + Vector2.Distance(profile[p], profile[p - 1]);
             for (int p = 0; p < profile.Length; p++) for (int i = 0; i <= segments; i++)
             {
                 float a = i * Mathf.PI * 2 / segments; int v = p * (segments + 1) + i;
                 vertices[v] = new Vector3(Mathf.Cos(a) * profile[p].x, profile[p].y, Mathf.Sin(a) * profile[p].x);
+                uv[v] = new Vector2((float)i / segments * 8f, profileDistance[p]);
                 if (p == profile.Length - 1 || i == segments) continue;
                 int next = v + segments + 1;
                 indices.AddRange(new[] { v, next, v + 1, v + 1, next, next + 1 });
             }
-            return Mesh(name, vertices, indices.ToArray());
+            Mesh shell = Mesh(name, vertices, indices.ToArray()); shell.uv = uv; return shell;
         }
         Mesh MakeRing(float radius, float tube, int segments, int sides)
         {
             var vertices = new Vector3[(segments + 1) * (sides + 1)]; var indices = new List<int>();
+            var uv = new Vector2[vertices.Length];
             for (int i = 0; i <= segments; i++) for (int j = 0; j <= sides; j++)
             {
                 float a = i * Mathf.PI * 2 / segments, b = j * Mathf.PI * 2 / sides;
                 int v = i * (sides + 1) + j; float r = radius + Mathf.Cos(b) * tube;
                 vertices[v] = new Vector3(Mathf.Cos(a) * r, Mathf.Sin(b) * tube, Mathf.Sin(a) * r);
+                uv[v] = new Vector2((float)i / segments * 8f, (float)j / sides * .16f);
                 if (i == segments || j == sides) continue;
                 int next = v + sides + 1; indices.AddRange(new[] { v, v + 1, next, v + 1, next + 1, next });
             }
-            return Mesh("Shared bamboo and ripple ring", vertices, indices.ToArray());
+            Mesh ring = Mesh("Shared bamboo and ripple ring", vertices, indices.ToArray()); ring.uv = uv; return ring;
         }
         Mesh MakeSurface()
         {

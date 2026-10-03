@@ -1,12 +1,18 @@
 Shader "MimoGarden/WovenBamboo"
 {
-    Properties { [MainColor] _BaseColor ("Natural split bamboo", Color) = (.85,.74,.58,1) }
+    Properties
+    {
+        [MainColor] _BaseColor ("Natural split bamboo", Color) = (.85,.74,.58,1)
+        [MainTexture] _BaseMap ("Generated bamboo fibre", 2D) = "white" {}
+        _GrainStrength ("Natural fibre variation", Range(0,1)) = 0
+    }
     SubShader
     {
         Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" }
         Pass
         {
             Tags { "LightMode"="UniversalForward" }
+            Cull Off
             HLSLPROGRAM
             #pragma target 3.0
             #pragma vertex Vert
@@ -15,7 +21,9 @@ Shader "MimoGarden/WovenBamboo"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
+                half _GrainStrength;
             CBUFFER_END
+            TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
             struct A { float4 positionOS:POSITION; float3 normalOS:NORMAL; float2 uv:TEXCOORD0; half4 color:COLOR; };
             struct V { float4 positionCS:SV_POSITION; float3 positionWS:TEXCOORD0; half3 normalWS:TEXCOORD1; float2 uv:TEXCOORD2; half4 color:COLOR; };
             V Vert(A i)
@@ -23,14 +31,14 @@ Shader "MimoGarden/WovenBamboo"
                 V o; o.positionWS = TransformObjectToWorld(i.positionOS.xyz); o.positionCS = TransformWorldToHClip(o.positionWS);
                 o.normalWS = TransformObjectToWorldNormal(i.normalOS); o.uv = i.uv; o.color = i.color; return o;
             }
-            half4 Frag(V i):SV_Target
+            half4 Frag(V i, bool frontFace : SV_IsFrontFace):SV_Target
             {
-                half3 n = normalize(i.normalWS);
-                float fibre = i.uv.y * 46.0 + sin(i.uv.x * 9.0 + i.uv.y * 4.0) * .9;
-                half visibility = 1.0 - smoothstep(.8, 2.4, fwidth(fibre));
-                half grain = sin(fibre) * .035 + sin(fibre * 2.83 + i.uv.x * 3) * .017;
-                half streak = sin(i.uv.y * 13.0 + sin(i.uv.x * 2.3)) * .025;
-                half3 bamboo = _BaseColor.rgb * i.color.rgb * (1 + grain * visibility + streak);
+                half3 n = normalize(i.normalWS) * (frontFace ? 1 : -1);
+                // UV.x follows each physical ribbon. Texture filtering handles distant fibres.
+                half3 fibre = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, float2(i.uv.x, i.uv.y * .16)).rgb;
+                // Normalize the generated scan's measured linear mean to preserve the approved bamboo palette.
+                half3 variation = lerp(half3(1,1,1), fibre / half3(.7227,.4852,.2425), _GrainStrength);
+                half3 bamboo = _BaseColor.rgb * i.color.rgb * variation;
                 Light light = GetMainLight();
                 half nl = saturate(dot(n, light.direction));
                 half3 view = SafeNormalize(GetWorldSpaceViewDir(i.positionWS));

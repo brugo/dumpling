@@ -20,7 +20,7 @@ O botão **Coleções** apresenta Jardim de Aurora, Guardião da Lua e Pérola d
 
 Esta entrega contém exclusivamente um provedor de pagamento simulado, com preços provisórios, persistência atômica e prevenção de crédito duplicado. Leia [LOJA-TESTE.md](LOJA-TESTE.md) para usar os controles de teste, entender o armazenamento local e conferir as pendências precisas para Google Play Billing oficial.
 
-Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.7.1**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
+Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.7.2**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
 
 ## Banho de bolhas e parque temático — 0.5.5
 
