@@ -298,7 +298,7 @@ Shader "MimoGarden/PastelFinish"
                     half3 volume = behind * transmittance * .82h;
                     // Scatter carries the gel's hue. Using per-channel (1-T) here would
                     // incorrectly fill the absorbed green wavelengths back into pink gel.
-                    volume += albedo * extinction * (.78h + .22h * wrap);
+                    volume += albedo * extinction * (.48h + .48h * wrap);
                     volume = lerp(volume, albedo * (.58h + .30h * wrap), .12h);
                     volume *= 1.0h - pow(1.0h - nv, 2.4h) * .18h;
                     volume += albedo * _Subsurface * pow(1.0h - nv, 2.0h) * .10h;

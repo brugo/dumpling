@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "created": "2026-10-03",
+  "assets": [
+    {
+      "file": "Assets/Resources/Environment/MimoLanternWorkshop.png",
+      "prompt": "Use case: stylized-concept. Asset type: final environment backdrop texture for a landscape 3D dumpling squishy game, not a screenshot or UI mockup. Create one polished original stylized 3D-animation-like Chinese dumpling workshop interior looking out through a broad wooden opening onto a charming sunlit lantern street. Wide 16:9 composition. Camera at countertop height slightly looking down. Lower 45 percent is an EMPTY warm honey bamboo worktop extending to the image edges, clean uninterrupted central area where a real interactive 3D steamer will be composited. No steamer or character in foreground. Upper half has large open view to small jade-roofed and coral plaster shops, subtly curved traditional roof eaves, lanterns, plants, distant hills. Left and right edges of the interior have fine wooden joinery, shelves with a few small ceramic bowls and bamboo baskets. Avoid anything busy in top left where title will overlay. Afternoon sun from upper left, warm bounced light, soft shadows, sophisticated restrained coral, jade, teal, bamboo gold and cream palette with touches of dusty pink. Tactile fine wood grain, ceramic glaze, gently aged plaster. Deep layered space and cinematic crafted detail, inviting to ages 6-12 and adults, no baby app style. No people, no faces, no words, no text, no letters, no logos, no watermark, no UI, no central objects, no brand or film characters. Single full bleed landscape image."
+    },
+    {
+      "file": "Assets/Resources/Environment/MimoBambooGarden.png",
+      "prompt": "Use case: stylized-concept. Asset type: original game environment backdrop, wide 16:9 full bleed. A charming stylized Chinese bamboo garden courtyard for a dumpling squishy collection game. Camera looking slightly down toward an inviting garden, matching a 3D game camera. Lower 60 percent is a large EMPTY flat pale warm sand-colored circular courtyard bordered by fine jade-green grass; spacious clear center and foreground reserved for interactive 3D toys and furniture added by the game engine, no foreground props, no characters. Upper background: layered bamboo, small coral plaster pavilion with jade teal curved roof and wooden lattice, warm coral lanterns, pond glimpses at the edges, small stone bridge far behind, delicate flowering tree, hazy green hills and blue sky. Natural afternoon light from upper left, restrained jade/coral/honey palette, tactile wood and stone, sophisticated animated feature atmosphere and soft shadows, beautiful polished stylized 3D illustration, not baby nursery design. Subtle depth, cohesive original art. No text, no logos, no UI, no people, no animals, no dumplings, no swing, no benches, no central objects."
+    }
+  ]
+}

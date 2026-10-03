@@ -33,10 +33,10 @@ namespace MimoGarden
         }
 
         static readonly FinishStyle[] FinishStyles = {
-            new FinishStyle(1f, .24f, .14f, .13f, 0f, 0f, 0f, 1f, .08f, .08f, .22f, .60f), // Powdered mochi with soft subsurface light.
-            new FinishStyle(1f, .68f, .32f, .35f, .72f, 0f, 0f, 1f, .30f, .035f, .09f, .90f), // Layered nacre, satin reflections.
-            new FinishStyle(.91f, .96f, .60f, .48f, .035f, 0f, .82f, 1.80f, .85f, .025f, .20f, .95f), // Thick transparent jelly with a wet polished skin.
-            new FinishStyle(.93f, .94f, .58f, .48f, .06f, 0f, .78f, 1.50f, .82f, .025f, .17f, .98f), // Clear jelly containing reflective metallic flakes.
+            new FinishStyle(1f, .48f, .19f, .18f, 0f, 0f, 0f, 1f, .20f, .045f, .34f, .65f), // Powdered mochi with soft subsurface light.
+            new FinishStyle(1f, .73f, .28f, .32f, .58f, 0f, 0f, 1f, .38f, .018f, .20f, .82f), // Layered nacre, satin reflections.
+            new FinishStyle(.94f, .90f, .39f, .40f, .035f, 0f, .86f, 1.45f, .62f, .012f, .28f, .82f), // Thick transparent jelly with a wet polished skin.
+            new FinishStyle(.94f, .89f, .37f, .42f, .11f, 0f, .84f, 1.30f, .60f, .012f, .25f, .85f), // Clear jelly containing reflective metallic flakes.
             new FinishStyle(1f, .50f, .38f, .22f, .10f, 1f, 0f, 1f, .15f, .24f, .14f, .85f), // Angular frosted sugar grains.
             new FinishStyle(1f, .82f, .35f, 1.15f, 1f, 0f, 0f, 1f, .50f, .055f, .15f, .90f) // Opalescent luminous glaze.
         };
@@ -61,7 +61,7 @@ namespace MimoGarden
 
             _glitterMaterial = new Material(sparkleShader) { name = "Mimo · lâminas de glitter refletivo no gel", renderQueue = 3010 };
             _glitterMaterial.SetFloat("_Billboard", 0f);
-            _glitterMaterial.SetFloat("_Intensity", 1.35f);
+            _glitterMaterial.SetFloat("_Intensity", .82f);
             _glitterMaterial.SetTexture("_FinishEnvironment", _finishEnvironment);
             _glitterMaterial.SetFloat("_EnvironmentStrength", 1f);
             _ownedMaterials.Add(_glitterMaterial);
@@ -153,7 +153,7 @@ namespace MimoGarden
             material.SetFloat("_FinishKind", FinishIndex);
             material.SetFloat("_Transmission", style.transmission);
             material.SetFloat("_Thickness", body ? style.thickness : style.thickness * .55f);
-            material.SetFloat("_RefractionStrength", body ? (FinishIndex == 2 ? .06f : .05f) : .018f);
+            material.SetFloat("_RefractionStrength", body ? (FinishIndex == 2 ? .032f : .028f) : .018f);
             material.SetFloat("_Subsurface", style.subsurface);
             material.SetFloat("_CoatStrength", style.coat);
             material.SetFloat("_MicroNormalStrength", style.microNormal);

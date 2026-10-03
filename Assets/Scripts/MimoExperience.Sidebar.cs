@@ -16,12 +16,16 @@ namespace MimoGarden
 
         void BuildSidebarChrome()
         {
-            sidebarBacking = Image("Quiet sidebar background", safeArea, Hex("F4EDF9")).rectTransform;
+            sidebarBacking = Image("Quiet sidebar background", safeArea, Hex("D7E2D6")).rectTransform;
             sidebarBacking.GetComponent<Image>().sprite = null;
             sidebarBacking.SetAsFirstSibling();
-            tray.GetComponent<Image>().color = new Color(1, .99f, .97f, .94f);
+            tray.GetComponent<Image>().color = new Color(1, .985f, .95f, .98f);
             tray.GetComponent<Shadow>().enabled = false;
             SetRect(header, Vector2.up, Vector2.up, Vector2.up, new Vector2(28, -22), new Vector2(570, 100));
+            Image headingPlate = Image("Readable ivory heading", header, new Color(1f, .976f, .91f, 1f));
+            headingPlate.raycastTarget = false;
+            SetRect(headingPlate.rectTransform, Vector2.up, Vector2.up, Vector2.up, new Vector2(-13, 10), new Vector2(580, 113));
+            headingPlate.transform.SetAsFirstSibling();
             title.fontSize = 29; title.resizeTextMaxSize = 29;
             SetRect(title.rectTransform, Vector2.up, Vector2.up, Vector2.up, new Vector2(0, -28), new Vector2(590, 42));
             subtitle.fontSize = 14;
@@ -75,10 +79,10 @@ namespace MimoGarden
             railScroll.movementType = ScrollRect.MovementType.Clamped;
             railScroll.inertia = true; railScroll.decelerationRate = .12f; railScroll.scrollSensitivity = 42f;
 
-            RectTransform bar = Image("Sidebar scroll track", region, Hex("E0E4EF")).rectTransform;
+            RectTransform bar = Image("Sidebar scroll track", region, Hex("E2E8DF")).rectTransform;
             bar.anchorMin = new Vector2(1, 0); bar.anchorMax = Vector2.one;
             bar.offsetMin = new Vector2(-5, 0); bar.offsetMax = Vector2.zero;
-            RectTransform thumb = Image("Sidebar scroll thumb", bar, Hex("9C83D4"), true).rectTransform;
+            RectTransform thumb = Image("Sidebar scroll thumb", bar, Hex("719E8C"), true).rectTransform;
             Stretch(thumb);
             Scrollbar scrollbar = bar.gameObject.AddComponent<Scrollbar>();
             scrollbar.direction = Scrollbar.Direction.BottomToTop; scrollbar.handleRect = thumb;

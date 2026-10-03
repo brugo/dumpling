@@ -122,6 +122,8 @@ namespace MimoGarden
 
             yield return experience.RunSmokeTest();
             yield return new WaitForSecondsRealtime(1.4f);
+            // The roster replaces the hidden recipe preview with the saved friend.
+            actor = experience.Actor;
             Check(experience.CurrentScreen == "Home" && actor.Data.created && !string.IsNullOrWhiteSpace(actor.Data.petName),
                 "Creation, birth and naming still lead to the care room.");
             Check(PetStorage.Load().created, "The newly created character reaches the isolated persistent save.");
@@ -230,13 +232,13 @@ namespace MimoGarden
         IEnumerator Capture(string filename)
         {
             yield return new WaitForEndOfFrame();
-            Texture2D image = ScreenCapture.CaptureScreenshotAsTexture();
+            Texture2D image = MimoRenderCapture.Frame(sceneCamera);
             if (!image) { errors.Add("Could not capture " + filename); yield break; }
             Color32[] pixels = image.GetPixels32();
             int low = 765, high = 0;
             for (int i = 0; i < pixels.Length; i += Mathf.Max(1, pixels.Length / 2000))
             { int brightness = pixels[i].r + pixels[i].g + pixels[i].b; low = Mathf.Min(low, brightness); high = Mathf.Max(high, brightness); }
-            Check(high > 100 && high - low > 50, filename + ": the normal player screenshot contains rendered color variation.");
+            Check(high > 100 && high - low > 50, filename + ": the rendered player frame contains color variation.");
             File.WriteAllBytes(Path.Combine(outputDirectory, filename), image.EncodeToPNG());
             Destroy(image); screenshots.Add(filename);
         }

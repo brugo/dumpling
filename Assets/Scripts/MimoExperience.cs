@@ -15,8 +15,8 @@ namespace MimoGarden
         enum Place { Laboratory, Birth, Naming, Home }
         enum Care { Food, Bath, Play }
 
-        readonly Color ink = Hex("233052"), muted = Hex("526585"), cream = Hex("FFF8E8");
-        readonly Color purple = Hex("6542D7"), palePurple = Hex("D9D4FF");
+        readonly Color ink = Hex("263E3B"), muted = Hex("56726A"), cream = Hex("FFF8E8");
+        readonly Color purple = Hex("237B6E"), palePurple = Hex("DCEEE5");
         readonly Color[] colors = PetCatalog.Colors;
         readonly string[] colorNames = PetCatalog.ColorNames;
         readonly List<Floaty> floaties = new List<Floaty>();
@@ -74,6 +74,7 @@ namespace MimoGarden
             circle = MakeSprite(true);
             BuildCameraAndLight();
             BuildWorld();
+            BuildVisualWorkshop();
             BuildCareEnvironments();
             BuildCanvas();
             actorRoot = new GameObject("Mimo — our little friend").transform;
@@ -155,6 +156,7 @@ namespace MimoGarden
 
         void LateUpdate()
         {
+            LayoutVisualWorkshop();
             // Only the two clear finishes need the scene-color copy. Solid recipes keep the original mobile budget.
             bool refract = actor && actor.gameObject.activeInHierarchy && actor.IsTranslucentFinish;
             foreach (PetActor pet in playgroundPets) if (pet.gameObject.activeInHierarchy && pet.IsTranslucentFinish) refract = true;
@@ -196,15 +198,15 @@ namespace MimoGarden
             tonemapping.mode.Override(TonemappingMode.Neutral);
             ColorAdjustments colorGrade = grading.profile.Add<ColorAdjustments>(true);
             colorGrade.postExposure.Override(.05f);
-            colorGrade.contrast.Override(8f);
-            colorGrade.saturation.Override(12f);
+            colorGrade.contrast.Override(4f);
+            colorGrade.saturation.Override(2f);
             }
             sceneCamera.gameObject.AddComponent<AudioListener>();
             RenderSettings.skybox = null;
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = Hex("C5BDCE");
-            RenderSettings.ambientEquatorColor = Hex("B0A2B5");
-            RenderSettings.ambientGroundColor = Hex("8C7E88");
+            RenderSettings.ambientSkyColor = Hex("D6E5E3");
+            RenderSettings.ambientEquatorColor = Hex("BFB5A6");
+            RenderSettings.ambientGroundColor = Hex("8A8072");
             RenderSettings.ambientIntensity = .55f;
             Light key = new GameObject("Warm afternoon key").AddComponent<Light>();
             key.type = LightType.Directional; key.color = Hex("FFF2DF"); key.intensity = MimoPerformance.Lightweight ? 1f : .85f;
@@ -212,7 +214,7 @@ namespace MimoGarden
             key.shadows = MimoPerformance.Lightweight ? LightShadows.None : LightShadows.Soft; key.shadowStrength = .4f; key.shadowBias = .04f;
             if (MimoPerformance.Lightweight) return;
             Light fill = new GameObject("Lilac bounce").AddComponent<Light>();
-            fill.type = LightType.Directional; fill.color = Hex("E5DDFF"); fill.intensity = .23f;
+            fill.type = LightType.Directional; fill.color = Hex("D5EFEA"); fill.intensity = .23f;
             fill.transform.rotation = Quaternion.Euler(30, 135, 0);
             fill.shadows = LightShadows.None;
             Light rim = new GameObject("Pearl rim light").AddComponent<Light>();
@@ -227,6 +229,8 @@ namespace MimoGarden
             Shader shader = Shader.Find(MimoPerformance.Lightweight ? "Universal Render Pipeline/Simple Lit" : "Universal Render Pipeline/Lit");
             if (!shader) shader = Shader.Find("Universal Render Pipeline/Lit");
             if (!shader) shader = Shader.Find("Standard");
+            if (key.IndexOf("oak", StringComparison.OrdinalIgnoreCase) >= 0 || key.IndexOf("maple", StringComparison.OrdinalIgnoreCase) >= 0)
+                shader = Resources.Load<Shader>("Shaders/MimoBamboo") ?? shader;
             material = new Material(shader) { name = key, color = color };
             if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
             if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", smooth);
@@ -246,6 +250,7 @@ namespace MimoGarden
             GameObject o = GameObject.CreatePrimitive(type); o.name = name;
             o.transform.SetParent(parent, false); o.transform.localPosition = position; o.transform.localScale = scale;
             o.GetComponent<Renderer>().sharedMaterial = material;
+            if (type == PrimitiveType.Cylinder) o.GetComponent<MeshFilter>().sharedMesh = SmoothVisualCylinder();
             if (MimoPerformance.Lightweight)
             {
                 if (type == PrimitiveType.Sphere) o.GetComponent<MeshFilter>().sharedMesh = GetMobileSphereMesh();
@@ -277,10 +282,10 @@ namespace MimoGarden
             laboratory = Group("01 — a little laboratory");
             Material wood = Mat("Milk oak", Hex("E29B36"), .35f);
             Material lavender = Mat("Ceramic lilac", Hex("8151E8"), .5f);
-            Material pearl = Mat("Pearl ceramic", Hex("FFF7DA"), .7f, .08f);
-            Disk("Pedestal shadow trim", laboratory, new Vector3(0, .035f, .22f), new Vector3(4.3f, .045f, 3.5f), Mat("Rosy pedestal edge", Hex("6542D7")));
+            Material pearl = Mat("Pearl ceramic", Hex("F5E8C9"), .5f, .02f);
+            Disk("Pedestal shadow trim", laboratory, new Vector3(0, .035f, .22f), new Vector3(4.3f, .045f, 3.5f), Mat("Rosy pedestal edge", Hex("287B6A"), .45f));
             Disk("Round creation table", laboratory, new Vector3(0, .15f, .22f), new Vector3(4.18f, .13f, 3.42f), pearl);
-            Disk("Concentric inlay", laboratory, new Vector3(0, .289f, .22f), new Vector3(3.48f, .008f, 2.89f), Mat("Pale lilac inlay", Hex("CED7F8"), .55f));
+            Disk("Concentric inlay", laboratory, new Vector3(0, .289f, .22f), new Vector3(3.48f, .008f, 2.89f), Mat("Pale lilac inlay", Hex("D4DFBA"), .36f));
             bowl = Group("Mixing bowl", laboratory);
             bowl.localPosition = new Vector3(0, .3f, 0);
             MakeBowl(bowl, pearl);
@@ -482,7 +487,7 @@ namespace MimoGarden
             scaler.referenceResolution = new Vector2(1280, 800); scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight; scaler.matchWidthOrHeight = .5f;
             safeArea = Rect("Safe landscape area", root.transform); Stretch(safeArea);
             header = Rect("Heading", safeArea); SetRect(header, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(36, -30), new Vector2(590, 138));
-            Text brand = Label("MIMO  /  PEQUENOS ENCANTOS", header, 13, ink, FontStyle.Bold); SetRect(brand.rectTransform, Vector2.up, Vector2.up, Vector2.up, Vector2.zero, new Vector2(540, 24));
+            Text brand = Label("MIMO  /  DUMPLING SQUISH", header, 13, ink, FontStyle.Bold); SetRect(brand.rectTransform, Vector2.up, Vector2.up, Vector2.up, Vector2.zero, new Vector2(540, 24));
             title = Label("", header, 36, ink, FontStyle.Bold); SetRect(title.rectTransform, Vector2.up, Vector2.up, Vector2.up, new Vector2(0, -32), new Vector2(670, 52));
             title.resizeTextForBestFit = true; title.resizeTextMinSize = 23; title.resizeTextMaxSize = 36;
             subtitle = Label("", header, 17, ink); SetRect(subtitle.rectTransform, Vector2.up, Vector2.up, Vector2.up, new Vector2(2, -87), new Vector2(640, 38));

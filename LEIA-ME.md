@@ -1,5 +1,9 @@
 # Mimo - meu pequeno mundo
 
+## Protótipo visual — 0.7.0
+
+Nova direção jade, coral e bambu: loja com vista para uma rua de lanternas, jardim de bambu, vaporeira trançada com vapor, materiais de squish refinados, nova iluminação e ajustes de interface. A criação e os saves mantêm o funcionamento atual. Veja [escopo, arte e validação](VISUAL-0.7.0.md). Abra `../MimoGardenPlayable/Abrir-prototipo-visual-0.7.0.cmd` para avaliar a versão Windows separadamente da anterior.
+
 ## Caudas traseiras - 0.6.1
 
 As sete caudas nascem do centro da superfície traseira do corpo e crescem para trás, acompanhando sua rotação e escala. Pompom e enrolado preservam as peças importadas; as demais mantêm seus formatos e materiais. As prévias da loja atualizam o enquadramento ao girar para mostrar a cauda inteira. Escolhas de receita, economia e arquivos de progresso mantêm a compatibilidade.

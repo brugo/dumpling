@@ -144,7 +144,7 @@ namespace MimoGarden
             mixingMeterLabel = Label("Mova o dedo para misturar", mixingMeter, 16, ink, FontStyle.Bold);
             mixingMeterLabel.alignment = TextAnchor.MiddleCenter;
             SetRect(mixingMeterLabel.rectTransform, new Vector2(.5f, 1), new Vector2(.5f, 1), new Vector2(.5f, 1), new Vector2(0, -5), new Vector2(270, 30));
-            Image track = Image("Mixing progress track", mixingMeter, Hex("E6DCF2")); track.raycastTarget = false;
+            Image track = Image("Mixing progress track", mixingMeter, Hex("DEE8DC")); track.raycastTarget = false;
             SetRect(track.rectTransform, new Vector2(.5f, 0), new Vector2(.5f, 0), new Vector2(.5f, 0), new Vector2(0, 12), new Vector2(258, 22));
             mixingMeterFill = Image("Mixing progress fill", track.transform, purple); mixingMeterFill.raycastTarget = false;
             Stretch(mixingMeterFill.rectTransform);
@@ -177,7 +177,7 @@ namespace MimoGarden
             if (saved.created)
             {
                 ingredientsTitle.rectTransform.sizeDelta = new Vector2(126, 38);
-                Button back = Button("Voltar", tray, Hex("DEE7F5"), ink, EnterHome, 18);
+                Button back = Button("Voltar", tray, Hex("E5EEE4"), ink, EnterHome, 18);
                 SetRect((RectTransform)back.transform, Vector2.one, Vector2.one, Vector2.one, new Vector2(-12, -8), new Vector2(86, 56));
             }
             ritualHint = RailLabel("Arraste para a vaporeira", 62, 56, 17, true);
@@ -198,7 +198,7 @@ namespace MimoGarden
             {
                 int chosen = category;
                 bool selected = step == category;
-                Button tab = Button("", categories, selected ? Hex("E4D7FF") : Hex("FFF9F2"), ink, () => SelectRecipeCategory(chosen));
+                Button tab = Button("", categories, selected ? Hex("DAEADD") : Hex("FFF9F2"), ink, () => SelectRecipeCategory(chosen));
                 tab.gameObject.name = "Category " + category + " " + PetCatalog.CategoryNames[category];
                 Destroy(tab.GetComponentInChildren<Text>().gameObject);
                 RectTransform cell = (RectTransform)tab.transform;
@@ -263,7 +263,7 @@ namespace MimoGarden
             {
                 if (!recipeOptionButtons[option]) continue;
                 bool chosen = option == selected && (step != 0 || mainIngredientAdded);
-                recipeOptionButtons[option].GetComponent<Image>().color = chosen ? Hex("DDD1FF") : Hex("F3F5FF");
+                recipeOptionButtons[option].GetComponent<Image>().color = chosen ? Hex("CCE2D5") : Hex("F0F3EA");
                 recipeOptionLabels[option].color = ink; recipeSelectionOutlines[option].enabled = chosen;
             }
         }

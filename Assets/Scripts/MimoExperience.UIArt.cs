@@ -56,7 +56,7 @@ namespace MimoGarden
         void PictureNavigation()
         {
             string[] names = { "Comidinha", "Banho", "Brincar", "Ateliê" };
-            Color[] colors = { Hex("FFF0DC"), Hex("E2F6F7"), Hex("EBE5FC"), Hex("FFF3D5") };
+            Color[] colors = { Hex("FFF0DC"), Hex("E2F6F7"), Hex("E4EEE3"), Hex("FFF3D5") };
             RectTransform nav = Rect("Always visible destinations", tray);
             nav.anchorMin = Vector2.zero; nav.anchorMax = Vector2.right;
             nav.offsetMin = new Vector2(8, 12); nav.offsetMax = new Vector2(-8, 94);
@@ -84,7 +84,7 @@ namespace MimoGarden
             for (int i = 0; i < modes.Length; i++)
             {
                 string mode = modes[i];
-                PictureCard(mode, i, 3, top + 36, Hex("F1EBFA"), () => { SetInteractionMode(mode); BuildHomeUI(); }, InteractionMode == mode, 106);
+                PictureCard(mode, i, 3, top + 36, Hex("EAF1E7"), () => { SetInteractionMode(mode); BuildHomeUI(); }, InteractionMode == mode, 106);
             }
         }
     }

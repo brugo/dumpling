@@ -8,7 +8,7 @@ namespace MimoGarden.EditorTools
     public static class MimoFinishEnvironment
     {
         const string AssetPath = "Assets/Resources/Materials/MimoFinishEnvironment.asset";
-        const string Revision = "Mimo finish studio v1";
+        const string Revision = "Mimo finish studio v2 - soft gel";
 
         public static void Ensure()
         {
@@ -62,8 +62,8 @@ namespace MimoGarden.EditorTools
             Color sky = new Color(.34f, .39f, .48f, 1);
             Color value = Color.Lerp(floor, sky, Mathf.SmoothStep(0, 1, d.y * .5f + .5f));
             // Large diffused photographic windows produce recognisable reflections across a curved body.
-            value += Panel(d, new Vector3(-.62f, .68f, -.65f), .32f, .46f, .035f) * new Color(4.9f, 4.65f, 4.3f, 0);
-            value += Panel(d, new Vector3(.80f, .32f, -.45f), .10f, .50f, .025f) * new Color(2.9f, 3.6f, 4.5f, 0);
+            value += Panel(d, new Vector3(-.62f, .68f, -.65f), .24f, .42f, .10f) * new Color(3.5f, 3.35f, 3.1f, 0);
+            value += Panel(d, new Vector3(.80f, .32f, -.45f), .08f, .46f, .065f) * new Color(2.3f, 2.9f, 3.3f, 0);
             value += Panel(d, new Vector3(.05f, .96f, .18f), .65f, .35f, .10f) * new Color(1.8f, 1.85f, 2.0f, 0);
             value += Panel(d, new Vector3(-.4f, .4f, .86f), .28f, .48f, .065f) * new Color(2.1f, 1.45f, 1.15f, 0);
             value.a = 1;

@@ -301,7 +301,7 @@ namespace MimoGarden
         IEnumerator Capture(string name)
         {
             yield return new WaitForEndOfFrame();
-            Texture2D texture = ScreenCapture.CaptureScreenshotAsTexture();
+            Texture2D texture = MimoRenderCapture.Frame(Camera.main);
             if (!texture) { errors.Add("Screenshot failed: " + name); yield break; }
             File.WriteAllBytes(Path.Combine(output, name), texture.EncodeToPNG()); Destroy(texture); screenshots.Add(name);
         }

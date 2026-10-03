@@ -47,7 +47,7 @@ namespace MimoGarden
         IEnumerator Render() { yield return new WaitForEndOfFrame(); Canvas.ForceUpdateCanvases(); yield return new WaitForEndOfFrame(); }
         IEnumerator Capture(string name)
         {
-            yield return Render(); Texture2D image = ScreenCapture.CaptureScreenshotAsTexture();
+            yield return Render(); Texture2D image = MimoRenderCapture.Frame(Camera.main);
             File.WriteAllBytes(Path.Combine(output, name + ".png"), image.EncodeToPNG()); Destroy(image);
         }
         Button Find(string name) => FindObjectsByType<Button>(FindObjectsSortMode.None).FirstOrDefault(b => b.gameObject.activeInHierarchy && b.GetComponentsInChildren<Text>().Any(t => t.text == name));

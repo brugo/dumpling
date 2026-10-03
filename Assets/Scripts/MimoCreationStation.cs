@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 namespace MimoGarden
 {
     /// <summary>Small reusable 3D workshop. Free touch movement drives a playful mixing animation.</summary>
-    public sealed class MimoCreationStation : MonoBehaviour
+    public sealed partial class MimoCreationStation : MonoBehaviour
     {
         enum Phase { Ready, Drag, Pour, Stir, Reveal }
         Phase phase;
@@ -51,7 +51,7 @@ namespace MimoGarden
             view = camera; transform.position = new Vector3(0, .29f, -.10f);
             sphereMesh = MakeSphere(); cylinderMesh = MakeCylinder(); cubeMesh = MakeCube();
             ringMesh = MakeRing(1f, .028f, 48, 6);
-            BuildStation(); ResetStation();
+            BuildStation(); BuildSteam(); ResetStation();
         }
         public Vector2 StirScreenPoint(float radians)
         {
@@ -59,6 +59,7 @@ namespace MimoGarden
         }
         public void ResetStation()
         {
+            if (steam) steam.gameObject.SetActive(false);
             CancelPointer(); phase = Phase.Ready; AddedIngredientCount = MixedIngredientCount = 0;
             fill = targetFill = 0; mixingProgress = spinRemaining = stirAngle = 0; reveal = rippleEnergy = 0;
             liquidColor = nextColor = C("FFE9C7"); SetColor(mixtureMaterial, liquidColor);
@@ -72,6 +73,7 @@ namespace MimoGarden
         public void RestoreForCreation()
         {
             // A reveal can be interrupted by recovery. Retain the mixed recipe, restore its workbench.
+            if (steam) steam.gameObject.SetActive(false);
             if (phase == Phase.Reveal) phase = Phase.Ready;
             basket.localScale = Vector3.one; basket.localPosition = Vector3.zero;
             lid.localPosition = lidRest; lid.localRotation = lidRestRotation; lid.localScale = Vector3.one;
@@ -268,6 +270,7 @@ namespace MimoGarden
         {
             if (phase != Phase.Reveal) return;
             reveal = Mathf.Clamp01(progress);
+            UpdateSteam(reveal);
             float close = Mathf.SmoothStep(0, 1, reveal / .17f);
             float open = Mathf.SmoothStep(0, 1, Mathf.Clamp01((reveal - .26f) / .35f));
             lid.localPosition = Vector3.Lerp(lidRest, new Vector3(0, .91f, 0), close) + Vector3.up * (open * 2.5f);
@@ -282,9 +285,10 @@ namespace MimoGarden
 
         void BuildStation()
         {
-            Material bamboo = Mat("Honey bamboo", C("D9A35D"), .28f);
-            Material light = Mat("Bamboo golden weave", C("F2CC8B"), .36f);
-            Material dark = Mat("Caramel bindings", C("9D653B"), .28f);
+            Material bamboo = Mat("Honey bamboo", C("C5A071"), .24f);
+            Material light = Mat("Bamboo golden weave", C("E3CCA0"), .25f);
+            Material dark = Mat("Caramel bindings", C("98754E"), .18f);
+            Material weave = Mat("Bamboo woven fiber", C("D7BD91"), .2f);
             Material mint = Mat("Jade handles", C("64BFA9"), .48f);
             Material pearl = Mat("Ceramic spoon pearl", C("FFF3CF"), .62f);
             basket = Group("Bamboo steamer — hollow woven basket", transform);
@@ -293,7 +297,7 @@ namespace MimoGarden
             for (int i = 0; i < 40; i++)
             {
                 float a = i * Mathf.PI * 2 / 40;
-                Transform slat = Part("Bamboo grain", basket, cubeMesh, new Vector3(Mathf.Cos(a) * 1.245f, .46f, Mathf.Sin(a) * 1.245f), new Vector3(.032f, .54f, .025f), i % 4 == 0 ? dark : light);
+                Transform slat = Part("Bamboo grain", basket, cubeMesh, new Vector3(Mathf.Cos(a) * 1.245f, .46f, Mathf.Sin(a) * 1.245f), new Vector3(.012f, .54f, .012f), i % 5 == 0 ? dark : bamboo);
                 slat.localRotation = Quaternion.Euler(0, -a * Mathf.Rad2Deg, 0);
             }
             Part("Lower binding", basket, ringMesh, new Vector3(0, .18f, 0), new Vector3(1.235f, 1.2f, 1.235f), dark);
@@ -302,22 +306,21 @@ namespace MimoGarden
             Part("Inner golden lip", basket, ringMesh, new Vector3(0, .79f, 0), new Vector3(1.16f, .85f, 1.16f), light);
             for (int side = -1; side <= 1; side += 2)
             {
-                Transform handle = Part("Jade woven handle", basket, ringMesh, new Vector3(side * 1.32f, .54f, 0), new Vector3(.25f, .8f, .32f), mint);
+                Transform handle = Part("Bamboo woven handle", basket, ringMesh, new Vector3(side * 1.32f, .54f, 0), new Vector3(.25f, .8f, .32f), light);
                 handle.localRotation = Quaternion.Euler(0, 0, 65 * side);
                 Part("Handle knot", basket, sphereMesh, new Vector3(side * 1.25f, .54f, -.18f), Vector3.one * .14f, light);
             }
+            Weave(basket, .207f, 1.055f, light, weave);
             BakeParts(basket);
 
             lid = Group("Bamboo lid with woven star", transform);
             Part("Domed bamboo cover", lid, sphereMesh, new Vector3(0, .07f, 0), new Vector3(2.46f, .24f, 2.46f), bamboo);
             Part("Lid bound edge", lid, ringMesh, Vector3.zero, new Vector3(1.23f, 2.1f, 1.23f), dark);
-            for (int i = -5; i <= 5; i++)
-            {
-                float p = i * .185f, length = Mathf.Sqrt(1.12f * 1.12f - p * p) * 2;
-                Part("Woven horizontal strip", lid, cubeMesh, new Vector3(0, .19f - Mathf.Abs(p) * .04f, p), new Vector3(length, .015f, .027f), light);
-                Part("Woven vertical strip", lid, cubeMesh, new Vector3(p, .192f - Mathf.Abs(p) * .04f, 0), new Vector3(.027f, .015f, length), light);
-            }
-            Part("Lid jade knob", lid, sphereMesh, new Vector3(0, .26f, 0), new Vector3(.34f, .25f, .34f), mint);
+            Weave(lid, .196f, 1.15f, light, weave);
+            Transform grip = Part("Bent bamboo lid loop", lid, ringMesh, new Vector3(0, .30f, 0), new Vector3(.22f, .85f, .18f), light);
+            grip.localRotation = Quaternion.Euler(90, 0, 0);
+            for (int side = -1; side <= 1; side += 2)
+                Part("Lid loop binding", lid, cubeMesh, new Vector3(side * .20f, .215f, 0), new Vector3(.09f, .035f, .18f), dark);
             BakeParts(lid);
 
             mixtureMaterial = Mat("A magical pearly mixture", C("FFE9C7"), .72f);
@@ -335,6 +338,20 @@ namespace MimoGarden
             for (int i = 0; i < ripples.Length; i++) ripples[i] = Part("Liquid swirl " + i, transform, ringMesh, Vector3.zero, Vector3.one, foam);
             guide = Group("Mixing sparkle pearls", transform); beads = new Transform[12];
             for (int i = 0; i < beads.Length; i++) beads[i] = Part("Mixing progress pearl " + i, guide, sphereMesh, Vector3.zero, Vector3.one * .05f, light);
+        }
+
+        void Weave(Transform parent, float height, float radius, Material light, Material warm)
+        {
+            const float pitch = .115f;
+            int steps = Mathf.FloorToInt(radius / pitch);
+            for (int x = -steps; x <= steps; x++) for (int z = -steps; z <= steps; z++)
+            {
+                float px = x * pitch, pz = z * pitch;
+                if (px * px + pz * pz > (radius - .065f) * (radius - .065f)) continue;
+                bool over = ((x + z) & 1) == 0;
+                Part("Over-under bamboo ribbon", parent, cubeMesh, new Vector3(px, height + (over ? .01f : 0), pz), new Vector3(pitch * 1.02f, .014f, .099f), light);
+                Part("Crosswoven bamboo ribbon", parent, cubeMesh, new Vector3(px, height + (over ? 0 : .01f), pz), new Vector3(.099f, .014f, pitch * 1.02f), warm);
+            }
         }
 
         Transform BuildIngredient(int category, int index)
@@ -433,6 +450,8 @@ namespace MimoGarden
             if (materials.TryGetValue(key, out Material material)) return material;
             Shader shader = Shader.Find("Universal Render Pipeline/Simple Lit");
             if (!shader) shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (key == "Bamboo woven fiber" || key == "Honey bamboo" || key == "Bamboo golden weave" || key == "Caramel bindings")
+                shader = Resources.Load<Shader>("Shaders/MimoBamboo") ?? shader;
             material = new Material(shader) { name = key }; SetColor(material, color);
             if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", smooth);
             materials.Add(key, material); return material;

@@ -40,9 +40,9 @@ namespace MimoGarden
         public bool HasThemeParkBackdrop => themeParkBackdrop;
         void BuildThemeParkBackdrop()
         {
-            Texture2D picture = Resources.Load<Texture2D>("Environment/MimoThemePark");
+            Texture2D picture = Resources.Load<Texture2D>("Environment/MimoBambooGarden");
             if (!picture) { Debug.LogError("Theme park image is missing."); return; }
-            Material material = Mat("ImageGen theme park panorama",Color.white);
+            Material material = Mat("Bamboo garden panorama",Color.white);
             material.shader = Shader.Find("Universal Render Pipeline/Unlit");
             material.SetColor("_BaseColor",Color.white); material.SetTexture("_BaseMap",picture);
             themeParkBackdrop = Shape("The illustrated theme park panorama",PrimitiveType.Quad,gardenRoom,Vector3.zero,Vector3.one,material);
@@ -51,7 +51,7 @@ namespace MimoGarden
         void LayoutThemeParkBackdrop()
         {
             if (!themeParkBackdrop || !sceneCamera) return;
-            const float distance = 45f;
+            const float distance = 35f;
             float height = 2 * Mathf.Tan(sceneCamera.fieldOfView*Mathf.Deg2Rad*.5f)*distance;
             float width = Mathf.Max(height*16f/9f,height*sceneCamera.aspect);
             themeParkBackdrop.position = sceneCamera.transform.position + sceneCamera.transform.forward*distance;
