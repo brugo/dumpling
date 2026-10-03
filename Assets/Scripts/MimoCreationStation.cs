@@ -24,9 +24,10 @@ namespace MimoGarden
         Vector2 lastStirScreen;
         bool stirring, released;
         const float SurfaceRadius = 1.08f, StirRadius = .70f, RequiredTravelRadii = 3.2f;
-        readonly Vector3 lidRest = new Vector3(1.60f, 1.15f, .78f);
-        readonly Quaternion lidRestRotation = Quaternion.Euler(-68, 12, 14);
+        readonly Vector3 lidRest = new Vector3(0, 1.85f, 0);
+        readonly Quaternion lidRestRotation = Quaternion.identity;
 
+        public bool LidVisible => lid && lid.gameObject.activeInHierarchy;
         public bool Busy => phase == Phase.Drag || phase == Phase.Pour || phase == Phase.Reveal;
         public bool PendingStir => phase == Phase.Pour || phase == Phase.Stir;
         public bool IsPouring => phase == Phase.Pour;
@@ -65,6 +66,7 @@ namespace MimoGarden
             liquidColor = nextColor = C("FFE9C7"); SetColor(mixtureMaterial, liquidColor);
             basket.localScale = Vector3.one; basket.localPosition = Vector3.zero;
             lid.localPosition = lidRest; lid.localRotation = lidRestRotation; lid.localScale = Vector3.one;
+            lid.gameObject.SetActive(false);
             liquid.gameObject.SetActive(false); flow.gameObject.SetActive(false); guide.gameObject.SetActive(false);
             spoon.gameObject.SetActive(true); spoonPoint = new Vector3(.74f, .84f, -.05f); PlaceSpoon(spoonPoint, 0);
             foreach (Transform model in ingredientModels.Values) model.gameObject.SetActive(false);
@@ -77,6 +79,7 @@ namespace MimoGarden
             if (phase == Phase.Reveal) phase = Phase.Ready;
             basket.localScale = Vector3.one; basket.localPosition = Vector3.zero;
             lid.localPosition = lidRest; lid.localRotation = lidRestRotation; lid.localScale = Vector3.one;
+            lid.gameObject.SetActive(false);
             spoon.gameObject.SetActive(true); liquid.gameObject.SetActive(fill > .001f);
             guide.gameObject.SetActive(phase == Phase.Stir);
         }
@@ -264,6 +267,8 @@ namespace MimoGarden
         public void BeginReveal()
         {
             CancelPointer(); phase = Phase.Reveal; reveal = 0;
+            lid.localPosition = lidRest; lid.localRotation = lidRestRotation; lid.localScale = Vector3.one;
+            lid.gameObject.SetActive(true);
             spoon.gameObject.SetActive(false); guide.gameObject.SetActive(false); flow.gameObject.SetActive(false);
         }
         public void SetRevealProgress(float progress)
@@ -281,25 +286,19 @@ namespace MimoGarden
             liquid.gameObject.SetActive(reveal < .45f);
             for (int i = 0; i < ripples.Length; i++) ripples[i].gameObject.SetActive(false);
         }
-        public void CompleteReveal() { gameObject.SetActive(false); }
+        public void CompleteReveal() { lid.gameObject.SetActive(false); gameObject.SetActive(false); }
 
         void BuildStation()
         {
             Material bamboo = Mat("Honey bamboo", C("C5A071"), .24f);
-            Material light = Mat("Bamboo golden weave", C("E3CCA0"), .25f);
-            Material dark = Mat("Caramel bindings", C("98754E"), .18f);
-            Material weave = Mat("Bamboo woven fiber", C("D7BD91"), .2f);
+            Material light = Mat("Bamboo golden weave", C("E8D2AB"), .25f);
+            Material dark = Mat("Caramel bindings", C("B99B73"), .18f);
             Material mint = Mat("Jade handles", C("64BFA9"), .48f);
             Material pearl = Mat("Ceramic spoon pearl", C("FFF3CF"), .62f);
             basket = Group("Bamboo steamer — hollow woven basket", transform);
             Mesh shell = Lathe("Hollow bamboo vessel", new[] { new Vector2(0, .05f), new Vector2(1.12f, .05f), new Vector2(1.24f, .17f), new Vector2(1.28f, .78f), new Vector2(1.18f, .83f), new Vector2(1.08f, .19f), new Vector2(0, .19f) }, 48);
             Part("Warm woven vessel", basket, shell, Vector3.zero, Vector3.one, bamboo);
-            for (int i = 0; i < 40; i++)
-            {
-                float a = i * Mathf.PI * 2 / 40;
-                Transform slat = Part("Bamboo grain", basket, cubeMesh, new Vector3(Mathf.Cos(a) * 1.245f, .46f, Mathf.Sin(a) * 1.245f), new Vector3(.012f, .54f, .012f), i % 5 == 0 ? dark : bamboo);
-                slat.localRotation = Quaternion.Euler(0, -a * Mathf.Rad2Deg, 0);
-            }
+            BuildWovenWall(basket);
             Part("Lower binding", basket, ringMesh, new Vector3(0, .18f, 0), new Vector3(1.235f, 1.2f, 1.235f), dark);
             Part("Upper binding", basket, ringMesh, new Vector3(0, .71f, 0), new Vector3(1.282f, 1.2f, 1.282f), dark);
             Part("Rounded golden lip", basket, ringMesh, new Vector3(0, .82f, 0), new Vector3(1.225f, 2.4f, 1.225f), light);
@@ -310,13 +309,15 @@ namespace MimoGarden
                 handle.localRotation = Quaternion.Euler(0, 0, 65 * side);
                 Part("Handle knot", basket, sphereMesh, new Vector3(side * 1.25f, .54f, -.18f), Vector3.one * .14f, light);
             }
-            Weave(basket, .207f, 1.055f, light, weave);
+            BuildWovenDisk(basket, .212f, 1.055f, false);
             BakeParts(basket);
 
-            lid = Group("Bamboo lid with woven star", transform);
-            Part("Domed bamboo cover", lid, sphereMesh, new Vector3(0, .07f, 0), new Vector3(2.46f, .24f, 2.46f), bamboo);
+            lid = Group("Bamboo lid with continuous basketweave", transform);
+            Mesh cover = Lathe("Smooth domed bamboo cover", new[] { new Vector2(0, -.01f), new Vector2(1.18f, -.01f), new Vector2(1.23f, .025f), new Vector2(1.19f, .085f), new Vector2(.9f, .13f), new Vector2(.4f, .175f), new Vector2(0, .19f) }, 64);
+            Part("Domed bamboo cover", lid, cover, Vector3.zero, Vector3.one, bamboo);
             Part("Lid bound edge", lid, ringMesh, Vector3.zero, new Vector3(1.23f, 2.1f, 1.23f), dark);
-            Weave(lid, .196f, 1.15f, light, weave);
+            BuildWovenDisk(lid, .157f, 1.16f, true);
+            Part("Rounded binding around lid weave", lid, ringMesh, new Vector3(0, .16f, 0), new Vector3(1.16f, 1.1f, 1.16f), light);
             Transform grip = Part("Bent bamboo lid loop", lid, ringMesh, new Vector3(0, .30f, 0), new Vector3(.22f, .85f, .18f), light);
             grip.localRotation = Quaternion.Euler(90, 0, 0);
             for (int side = -1; side <= 1; side += 2)
@@ -338,20 +339,6 @@ namespace MimoGarden
             for (int i = 0; i < ripples.Length; i++) ripples[i] = Part("Liquid swirl " + i, transform, ringMesh, Vector3.zero, Vector3.one, foam);
             guide = Group("Mixing sparkle pearls", transform); beads = new Transform[12];
             for (int i = 0; i < beads.Length; i++) beads[i] = Part("Mixing progress pearl " + i, guide, sphereMesh, Vector3.zero, Vector3.one * .05f, light);
-        }
-
-        void Weave(Transform parent, float height, float radius, Material light, Material warm)
-        {
-            const float pitch = .115f;
-            int steps = Mathf.FloorToInt(radius / pitch);
-            for (int x = -steps; x <= steps; x++) for (int z = -steps; z <= steps; z++)
-            {
-                float px = x * pitch, pz = z * pitch;
-                if (px * px + pz * pz > (radius - .065f) * (radius - .065f)) continue;
-                bool over = ((x + z) & 1) == 0;
-                Part("Over-under bamboo ribbon", parent, cubeMesh, new Vector3(px, height + (over ? .01f : 0), pz), new Vector3(pitch * 1.02f, .014f, .099f), light);
-                Part("Crosswoven bamboo ribbon", parent, cubeMesh, new Vector3(px, height + (over ? 0 : .01f), pz), new Vector3(.099f, .014f, pitch * 1.02f), warm);
-            }
         }
 
         Transform BuildIngredient(int category, int index)

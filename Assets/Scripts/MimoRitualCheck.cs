@@ -76,6 +76,9 @@ namespace MimoGarden
             Check(!experience.CanFinalizeRecipe, "An empty steamer cannot produce a character.");
             experience.BeginBirth();
             Check(experience.CurrentScreen == "Laboratory", "Finalizing an empty recipe is rejected.");
+            Check(!experience.CreationStation.LidVisible, "The lid is hidden while choosing ingredients.");
+            experience.CreationStation.RestoreForCreation();
+            Check(!experience.CreationStation.LidVisible, "Recovering a recipe keeps the work area open.");
             yield return Capture("01-empty-steamer.png");
 
             Vector2 source = new Vector2(Screen.width - 90, Screen.height * .45f);
@@ -92,6 +95,7 @@ namespace MimoGarden
             yield return new WaitForSecondsRealtime(.7f);
             Check(experience.CreationStation.IsPouring && experience.CreationStation.LiquidFill > 0,
                 "The bottle pour is animated while the real liquid level rises.");
+            Check(!experience.CreationStation.LidVisible, "The lid cannot cover a pouring ingredient.");
             yield return Capture("02-bottle-pouring.png");
             while (experience.CreationStation.IsPouring) yield return null;
             Check(experience.PendingStir, "Poured liquid waits for a real stirring gesture.");
@@ -148,16 +152,19 @@ namespace MimoGarden
                 "Dropped ingredients preserve the intended recipe.");
             Check(!actor.gameObject.activeInHierarchy, "Even the complete recipe keeps its result secret.");
             CheckCreationScroll();
+            Check(!experience.CreationStation.LidVisible, "The complete mixture stays uncovered until finalization.");
             yield return Capture("03-ready-for-surprise.png");
             experience.BeginBirth();
             Check(experience.CurrentScreen == "Birth", "A fully mixed recipe starts its reveal.");
             yield return new WaitForSecondsRealtime(.65f);
             Check(!actor.gameObject.activeInHierarchy, "The closed-steamer anticipation conceals the result.");
+            Check(experience.CreationStation.LidVisible, "Finalizing reveals the woven lid for steaming.");
             yield return Capture("04-steaming.png");
             yield return new WaitForSecondsRealtime(2.9f);
             Check(experience.CurrentScreen == "Naming" && actor.gameObject.activeInHierarchy, "The surprise reveals a live character and naming controls.");
             Check(actor.Data.colorIndex == 1 && actor.Data.earsIndex == 1 && actor.Data.wingsIndex == 2 && actor.Data.finishIndex == 3,
                 "The revealed character matches the actual mixed ingredients.");
+            Check(!experience.CreationStation.LidVisible, "The lid leaves with the steamer after the character appears.");
             yield return Capture("05-surprise-reveal.png");
             experience.ConfirmName(); yield return null; actor = experience.Actor;
             Check(experience.CurrentScreen == "Home" && PetStorage.Load().finishIndex == 3, "The complete recipe and finish persist after naming.");

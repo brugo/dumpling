@@ -1,5 +1,9 @@
 # Mimo - meu pequeno mundo
 
+## Vaporeira refinada — 0.7.1
+
+A tampa fica escondida ao escolher e misturar ingredientes. Ao finalizar, ela entra por cima para a animação de vapor e revelação. A lateral recebeu faixas largas de bambu entrelaçadas com pares de hastes finas; tampa e fundo usam tiras contínuas em relevo, com veios e bordas arredondadas. Veja [detalhes e validação](VAPOREIRA-0.7.1.md). Abra `../MimoGardenPlayable/Abrir-prototipo-visual-0.7.1.cmd`.
+
 ## Protótipo visual — 0.7.0
 
 Nova direção jade, coral e bambu: loja com vista para uma rua de lanternas, jardim de bambu, vaporeira trançada com vapor, materiais de squish refinados, nova iluminação e ajustes de interface. A criação e os saves mantêm o funcionamento atual. Veja [escopo, arte e validação](VISUAL-0.7.0.md). Abra `../MimoGardenPlayable/Abrir-prototipo-visual-0.7.0.cmd` para avaliar a versão Windows separadamente da anterior.
@@ -16,7 +20,7 @@ O botão **Coleções** apresenta Jardim de Aurora, Guardião da Lua e Pérola d
 
 Esta entrega contém exclusivamente um provedor de pagamento simulado, com preços provisórios, persistência atômica e prevenção de crédito duplicado. Leia [LOJA-TESTE.md](LOJA-TESTE.md) para usar os controles de teste, entender o armazenamento local e conferir as pendências precisas para Google Play Billing oficial.
 
-Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.6.1**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
+Protótipo de bichinhos 3D que a criança cria e cuida. Projeto **0.7.1**, Unity **6000.6.0f1**, URP, pensado para tablets na horizontal. O nome Mimo e a identidade visual são provisórios.
 
 ## Banho de bolhas e parque temático — 0.5.5
 
