@@ -30,7 +30,7 @@ As duas ilustrações foram geradas com a ferramenta integrada `image_gen`, sem 
 
 Relatórios e capturas ficam em `../MimoGardenPreview/0.7.0/`. Criação/banho: 83 checks; materiais: 188 checks; interface em perfil móvel e proporção 4:3: 192 checks, todos aprovados e com save normal preservado. As capturas de criação e interface usam renderização fora da tela, pois uma janela de teste oculta no Windows pode não apresentar um framebuffer. O helper de captura só é acionado pelos testes.
 
-O perfil móvel executado no computador não substitui a validação de desempenho em tablet físico. Não houve instalação automática no dispositivo nesta etapa.
+Após o usuário conectar o tablet, a versão 0.7.0 (código 13) foi instalada por atualização no Samsung Galaxy Tab A8 / SM-X200 em 03/10/2026. O save foi copiado antes da instalação e permaneceu idêntico após a instalação e o teste isolado. Os 44 checks de desempenho e funcionamento passaram no dispositivo: mediana próxima de 16,7 ms e p95 entre 16,71 e 16,79 ms nos quatro ambientes. O jogo foi reaberto normalmente com os cinco amigos existentes. Evidências em `../MimoGardenPreview/0.7.0/tablet-SM-X200/`.
 
 O teste antigo de desempenho foi atualizado para usar o amigo ativo após o nascimento (a prévia oculta da receita é um objeto diferente desde a introdução do grupo de amigos). A mesma checagem agora captura a imagem renderizada fora da tela, sem depender de uma janela visível. Nenhuma regra de sucesso foi relaxada.
 
