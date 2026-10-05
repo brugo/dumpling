@@ -60,7 +60,7 @@ namespace MimoGarden
                 case "Comidinha": case "Dar frutinha": return Get("MimoUIAtlas", 8);
                 case "Banho": return Get("MimoUIAtlas", 9);
                 case "Brincar": return Get("MimoUIAtlas", 10);
-                case "Ateliê": case "Criar meu Mimo!": case "Criar outro amigo": return Get("MimoUIAtlas", 11);
+                case "Surpresa": case "Revelar surpresa!": case "Ateliê": case "Criar meu Mimo!": case "Criar outro amigo": return Get("MimoUIAtlas", 11);
                 case "Pular sem parar": case "Um pulinho!": return Get("MimoUIAtlas", 12);
                 case "Pega-pega": return Get("MimoUIAtlas", 13);
                 case "Descansar": return Get("MimoUIAtlas", 14);

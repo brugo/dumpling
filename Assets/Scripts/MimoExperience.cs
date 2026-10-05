@@ -567,6 +567,7 @@ namespace MimoGarden
 
         public void EnterLaboratory()
         {
+            surpriseCreation = false;
             ShowLaboratory(false);
         }
 
@@ -590,6 +591,7 @@ namespace MimoGarden
             if (!keepRecipe || draft == null)
             {
                 step = 0;
+                ResetSurpriseRecipe();
                 draft = new PetSave { colorIndex = 0, created = false, cleanliness = 1f, hunger = .9f, joy = 1f };
             }
             place = Place.Laboratory;
@@ -598,19 +600,24 @@ namespace MimoGarden
             actorRoot.gameObject.SetActive(false); actorRoot.localRotation = Quaternion.identity; actorRoot.localScale = Vector3.one; actorRoot.localPosition = new Vector3(0, .29f, 0);
             bowl.gameObject.SetActive(false); brew.gameObject.SetActive(false); brewParts.gameObject.SetActive(false);
             if (tool) Destroy(tool.gameObject);
-            title.text = "Uma receita. Uma surpresa.";
-            subtitle.text = "Arraste os ingredientes. Mova o dedo para misturar. Descubra quem vai nascer.";
+            title.text = surpriseCreation ? "O que vai nascer hoje?" : "Uma receita. Uma surpresa.";
+            subtitle.text = surpriseCreation ? "Farinha, ovo, leite... misture e descubra um dumpling surpresa!" : "Arraste os ingredientes. Mova o dedo para misturar. Descubra quem vai nascer.";
             ResetCreationRitual(keepRecipe); BuildRecipeUI();
-            Toast("Arraste uma garrafinha para a vaporeira para começar.", 5f);
+            Toast(surpriseCreation ? "A mesma receita pode trazer uma nova surpresa. Sempre sem asas!" : "Arraste uma garrafinha para a vaporeira para começar.", 5f);
         }
 
         public void BeginBirth()
         {
             if (place != Place.Laboratory || revealRoutine != null) return;
-            if (!CanFinalizeRecipe) { Toast("Coloque uma cor e mexa a receita antes de finalizar.", 3f); return; }
+            if (!CanFinalizeRecipe) { Toast(surpriseCreation ? "Coloque um ingrediente e misture antes de revelar." : "Coloque uma cor e mexa a receita antes de finalizar.", 3f); return; }
             try
             {
                 // The character is configured out of sight; the reveal is the first preview.
+                if (surpriseCreation && !surpriseRolled)
+                {
+                    draft = MimoSurpriseRecipe.Roll(surpriseAmounts, surpriseRandom);
+                    surpriseRolled = true;
+                }
                 actor.ClearSoap();
                 actor.Initialize(draft);
             }

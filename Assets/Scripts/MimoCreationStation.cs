@@ -115,6 +115,8 @@ namespace MimoGarden
             spinRemaining = 0; stirring = false;
             AddedIngredientCount++; targetFill = Mathf.Min(1f, .50f + (AddedIngredientCount - 1) * .065f);
             nextColor = DragCategory == 0 ? PetCatalog.Colors[DragIndex] : liquidColor;
+            if (DragCategory == MimoSurpriseRecipe.Category)
+                nextColor = Color.Lerp(liquidColor, DragIndex == 1 ? C("F7DFA0") : C("FFF2DC"), .28f);
             if (DragCategory == 7 && DragIndex == 1) nextColor = Color.Lerp(liquidColor, Color.white, .16f);
             SetColor(streamMaterial, DragCategory == 0 ? nextColor : C("FFEAC7"));
             liquid.gameObject.SetActive(true); guide.gameObject.SetActive(false); return true;
@@ -211,7 +213,7 @@ namespace MimoGarden
         }
         void AnimateIngredient(float dt)
         {
-            bool bottle = DragCategory == 0 || DragCategory == 7;
+            bool bottle = DragCategory == 0 || DragCategory == 7 || (DragCategory == MimoSurpriseRecipe.Category && DragIndex != 1);
             float approach = Mathf.SmoothStep(0, 1, elapsed / .32f);
             Vector3 pourPosition = new Vector3(.70f, 1.55f, .10f);
             if (bottle)
@@ -344,6 +346,7 @@ namespace MimoGarden
 
         Transform BuildIngredient(int category, int index)
         {
+            if (category == MimoSurpriseRecipe.Category) return BuildKitchenIngredient(index);
             Transform root = Group("Ingredient " + category + "." + index, transform);
             Material cream = Mat("Bottle milk glass", C("FFF4D8"), .68f);
             Material gold = Mat("Ingredient cork", C("C79352"), .35f);

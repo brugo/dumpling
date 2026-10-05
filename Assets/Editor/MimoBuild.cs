@@ -119,7 +119,7 @@ namespace MimoGarden.EditorTools
 
             PlayerSettings.companyName = "Mimo Garden";
             PlayerSettings.productName = "Mimo — Meu pequeno mundo";
-            PlayerSettings.bundleVersion = "0.7.2";
+            PlayerSettings.bundleVersion = "0.8.0";
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.defaultScreenWidth = 1440;
             PlayerSettings.defaultScreenHeight = 900;
@@ -205,7 +205,7 @@ namespace MimoGarden.EditorTools
                 PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
                 PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
                 PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
-                PlayerSettings.Android.bundleVersionCode = Mathf.Max(15, PlayerSettings.Android.bundleVersionCode);
+                PlayerSettings.Android.bundleVersionCode = Mathf.Max(16, PlayerSettings.Android.bundleVersionCode);
                 PlayerSettings.Android.buildApkPerCpuArchitecture = false;
                 PlayerSettings.Android.splitApplicationBinary = false;
                 PlayerSettings.Android.useCustomKeystore = false;

@@ -72,7 +72,7 @@ namespace MimoGarden
 
         public void SelectRecipeCategory(int category)
         {
-            if (place != Place.Laboratory) return;
+            if (place != Place.Laboratory || surpriseCreation) return;
             step = Mathf.Clamp(category, 0, PetCatalog.CategoryCount - 1); BuildRecipeUI();
         }
         static bool NoPhysicalIngredient(int category, int index)
@@ -81,7 +81,7 @@ namespace MimoGarden
         // A tap can omit a piece. Actual ingredients travel into the steamer and get mixed.
         public void SelectIngredient(int index)
         {
-            if (place != Place.Laboratory || !creationStation) return;
+            if (place != Place.Laboratory || !creationStation || surpriseCreation) return;
             index = Mathf.Clamp(index, 0, PetCatalog.Options(step).Length - 1);
             if (creationStation.Busy) return;
             if (NoPhysicalIngredient(step, index))
@@ -93,8 +93,18 @@ namespace MimoGarden
         }
         public bool BeginIngredientDrag(int category, int index, Vector2 screenPosition)
         {
-            if (place != Place.Laboratory || !creationStation || category < 0 || category >= PetCatalog.CategoryCount) return false;
-            if (index < 0 || index >= PetCatalog.Options(category).Length || NoPhysicalIngredient(category, index)) return false;
+            if (place != Place.Laboratory || !creationStation) return false;
+            if (surpriseCreation)
+            {
+                if (category != MimoSurpriseRecipe.Category || index < 0 || index >= 3) return false;
+                if (MimoSurpriseRecipe.Total(surpriseAmounts) >= MimoSurpriseRecipe.MaxPortions)
+                { Toast("A vaporeira está cheia! Misture e revele sua surpresa.", 3); return false; }
+            }
+            else
+            {
+                if (category < 0 || category >= PetCatalog.CategoryCount) return false;
+                if (index < 0 || index >= PetCatalog.Options(category).Length || NoPhysicalIngredient(category, index)) return false;
+            }
             if (creationStation.Busy) return false;
             EndStir();
             return creationStation.BeginIngredientDrag(category, index, screenPosition);
@@ -107,8 +117,16 @@ namespace MimoGarden
             bool dropped = creationStation.EndIngredientDrag(position);
             if (dropped)
             {
-                PetCatalog.Set(draft, category, index);
-                if (category == 0) mainIngredientAdded = true;
+                if (surpriseCreation)
+                {
+                    surpriseAmounts[index]++; surpriseRolled = false; mainIngredientAdded = true;
+                    RefreshSurpriseCounts();
+                }
+                else
+                {
+                    PetCatalog.Set(draft, category, index);
+                    if (category == 0) mainIngredientAdded = true;
+                }
                 RefreshRecipeSelection(); lastRitualStatus = -1; RefreshRitualStatus();
             }
             return dropped;
@@ -132,8 +150,8 @@ namespace MimoGarden
             bowl.gameObject.SetActive(false); brew.gameObject.SetActive(false); brewParts.gameObject.SetActive(false);
             RefreshRecipeSelection();
         }
-        // Compatibility for old callers, without an automatic shortcut around the ritual.
-        public void SurpriseRecipe() { Toast("Arraste uma cor e mova o dedo na mistura!", 4f); }
+        // Existing callers now enter the separate kitchen experiment; mixing is still required.
+        public void SurpriseRecipe() { EnterSurpriseLaboratory(); }
 
         void EnsureMixingMeter()
         {
@@ -172,6 +190,7 @@ namespace MimoGarden
 
         void BuildRecipeUI()
         {
+            if (surpriseCreation) { BuildSurpriseUI(); return; }
             SidebarStart("Creation");
             Text ingredientsTitle = RailLabel("INGREDIENTES", 12, 30, 16, true);
             if (saved.created)
@@ -180,20 +199,21 @@ namespace MimoGarden
                 Button back = Button("Voltar", tray, Hex("E5EEE4"), ink, EnterHome, 18);
                 SetRect((RectTransform)back.transform, Vector2.one, Vector2.one, Vector2.one, new Vector2(-12, -8), new Vector2(86, 56));
             }
-            ritualHint = RailLabel("Arraste para a vaporeira", 62, 56, 17, true);
+            BuildCreationModeButtons();
+            ritualHint = RailLabel("Arraste para a vaporeira", 124, 56, 17, true);
             const int categoryColumns = 4;
             const float categoryHeight = 96f, categoryStride = 104f;
             float categoriesHeight = Mathf.CeilToInt(PetCatalog.CategoryCount / (float)categoryColumns) * categoryStride;
             RectTransform categories = Rect("Ingredient categories", tray);
             categories.anchorMin = Vector2.up; categories.anchorMax = Vector2.one; categories.pivot = Vector2.up;
-            categories.offsetMin = new Vector2(12, -122 - categoriesHeight); categories.offsetMax = new Vector2(-12, -122);
+            categories.offsetMin = new Vector2(12, -184 - categoriesHeight); categories.offsetMax = new Vector2(-12, -184);
             string[] names = PetCatalog.Options(step);
             int rows = Mathf.CeilToInt(names.Length / 2f);
             const float optionHeight = 152f, optionStride = 160f;
-            RailLabel(PetCatalog.CategoryNames[step] + " · " + names.Length, 122 + categoriesHeight, 32, 22, true);
+            RailLabel(PetCatalog.CategoryNames[step] + " · " + names.Length, 184 + categoriesHeight, 32, 22, true);
             // Category pictures stay within reach while only the ingredients scroll.
             rememberedRailOffset = 0;
-            CreateRailScroll(160 + categoriesHeight, 132, rows * optionStride + 8f);
+            CreateRailScroll(222 + categoriesHeight, 132, rows * optionStride + 8f);
             for (int category = 0; category < PetCatalog.CategoryCount; category++)
             {
                 int chosen = category;
@@ -257,6 +277,7 @@ namespace MimoGarden
         }
         void RefreshRecipeSelection()
         {
+            if (surpriseCreation) { RefreshSurpriseCounts(); return; }
             if (recipeOptionButtons == null || draft == null) return;
             int selected = PetCatalog.Get(draft, step);
             for (int option = 0; option < recipeOptionButtons.Length; option++)
@@ -273,8 +294,10 @@ namespace MimoGarden
             RefreshMixingMeter();
             int status = creationStation.IsPouring ? 1000 : PendingStir ? 2000 : CanFinalizeRecipe ? 3000 : 4000;
             if (lastRitualStatus == status) return; lastRitualStatus = status;
-            ritualHint.text = "Arraste ingredientes\npara a vaporeira.";
-            ritualFooter.text = PendingStir ? "Pode acrescentar ingredientes\ne misturar quando quiser." : CanFinalizeRecipe ? "Crie agora ou acrescente\noutro ingrediente." : "Puxe para a esquerda.\nDeslize para ver mais.";
+            ritualHint.text = surpriseCreation ? "Arraste para a vaporeira.\nPode repetir os ingredientes!" : "Arraste ingredientes\npara a vaporeira.";
+            ritualFooter.text = surpriseCreation
+                ? (MimoSurpriseRecipe.Total(surpriseAmounts) >= MimoSurpriseRecipe.MaxPortions ? "Vaporeira cheia!\nMisture e revele sua surpresa." : PendingStir ? "Mova o dedo para misturar.\nO resultado é sempre surpresa!" : "Mesma receita, novas possibilidades.\nTodos nascem sem asas.")
+                : PendingStir ? "Pode acrescentar ingredientes\ne misturar quando quiser." : CanFinalizeRecipe ? "Crie agora ou acrescente\noutro ingrediente." : "Puxe para a esquerda.\nDeslize para ver mais.";
             finishRecipeButton.interactable = CanFinalizeRecipe;
         }
         void HandleCreationTouch()

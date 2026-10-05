@@ -5,7 +5,8 @@ namespace MimoGarden
 {
     public sealed partial class MimoExperience
     {
-        float RailWidth => railScreen == "Creation" ? 360f : 320f;
+        // Five persistent destinations need room for readable labels and large touch targets.
+        float RailWidth => 360f;
         const float RailTouchHeight = 56f;
         RectTransform sidebarBacking, railContent;
         ScrollRect railScroll;

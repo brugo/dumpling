@@ -70,7 +70,7 @@ namespace MimoGarden
             foreach (string room in new[] { "Play", "Food", "Bath" })
             {
                 app.VisitCareRoom(room); yield return Render();
-                foreach (string destination in new[] { "Comidinha", "Banho", "Brincar", "Ateliê" })
+                foreach (string destination in new[] { "Comidinha", "Banho", "Brincar", "Ateliê", "Surpresa" })
                 {
                     Button b = Find(destination);
                     Check(b && !b.GetComponentInParent<ScrollRect>(), room + ": destination always visible: " + destination);

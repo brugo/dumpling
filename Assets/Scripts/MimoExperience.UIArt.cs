@@ -34,6 +34,15 @@ namespace MimoGarden
                 label.rectTransform.offsetMin = new Vector2(size + 10, 5); label.rectTransform.offsetMax = new Vector2(-8, -5);
                 label.fontSize = 18;
             }
+            if (text == "Surpresa" || text == "Revelar surpresa!")
+            {
+                Image badge = Image("Surprise question badge", art.transform, Hex("8466AE"), true); badge.raycastTarget = false;
+                SetRect(badge.rectTransform, Vector2.one, Vector2.one, Vector2.one, new Vector2(0, -2), new Vector2(23, 23));
+                Text question = Label("?", badge.transform, 18, Color.white, FontStyle.Bold);
+                question.verticalOverflow = VerticalWrapMode.Overflow;
+                question.horizontalOverflow = HorizontalWrapMode.Overflow;
+                question.alignment = TextAnchor.MiddleCenter; Stretch(question.rectTransform);
+            }
             button.gameObject.AddComponent<MimoUIButtonFeedback>().artwork = art.rectTransform;
         }
 
@@ -55,17 +64,17 @@ namespace MimoGarden
 
         void PictureNavigation()
         {
-            string[] names = { "Comidinha", "Banho", "Brincar", "Ateliê" };
-            Color[] colors = { Hex("FFF0DC"), Hex("E2F6F7"), Hex("E4EEE3"), Hex("FFF3D5") };
+            string[] names = { "Comidinha", "Banho", "Brincar", "Ateliê", "Surpresa" };
+            Color[] colors = { Hex("FFF0DC"), Hex("E2F6F7"), Hex("E4EEE3"), Hex("FFF3D5"), Hex("F3E6F4") };
             RectTransform nav = Rect("Always visible destinations", tray);
             nav.anchorMin = Vector2.zero; nav.anchorMax = Vector2.right;
             nav.offsetMin = new Vector2(8, 12); nav.offsetMax = new Vector2(-8, 94);
             for (int i = 0; i < names.Length; i++)
             {
                 int destination = i;
-                Button button = Button(names[i], nav, colors[i], ink, () => { if (destination == 3) EnterLaboratory(); else SelectCare((Care)destination); });
+                Button button = Button(names[i], nav, colors[i], ink, () => { if (destination == 4) EnterSurpriseLaboratory(); else if (destination == 3) EnterLaboratory(); else SelectCare((Care)destination); });
                 RectTransform cell = (RectTransform)button.transform;
-                cell.anchorMin = new Vector2(i * .25f, 0); cell.anchorMax = new Vector2((i + 1) * .25f, 1);
+                cell.anchorMin = new Vector2(i / 5f, 0); cell.anchorMax = new Vector2((i + 1) / 5f, 1);
                 cell.offsetMin = new Vector2(3, 0); cell.offsetMax = new Vector2(-3, 0);
                 PictureButton(button, names[i], true, 54);
                 Text label = button.GetComponentInChildren<Text>(); label.fontSize = 12;
