@@ -1,4 +1,4 @@
-# Versionamento local do Mimo
+# Versionamento do Mimo
 
 O repositório fica nesta pasta `MimoGardenUnity`, na branch `main`. Ele preserva o projeto Unity: `Assets` com seus arquivos `.meta`, `Packages` (incluindo o lock), `ProjectSettings`, documentação e o comando de abertura do Editor.
 
@@ -29,7 +29,7 @@ Inclua também os arquivos de documentação e configuração que tiver alterado
 
 Na configuração inicial, os assets necessários somam cerca de 20 MB e o maior arquivo tem aproximadamente 8,4 MB. Git LFS não foi configurado. Reavalie LFS se surgirem modelos, texturas, áudio ou arquivos Blender grandes, sobretudo arquivos individuais acima de 50 MB que mudem com frequência. Preserve os arquivos editáveis de origem mantidos fora desta pasta em uma estratégia de backup própria.
 
-O repositório é local. Nenhum remoto foi criado ou configurado. Um remoto e seu compartilhamento podem ser definidos depois, conforme a escolha do proprietário.
+O remoto `origin` aponta para [brugo/dumpling](https://github.com/brugo/dumpling). A branch principal é `main`, com o histórico local preservado. Depois de registrar e revisar as alterações, use `git push` para enviá-las ao GitHub.
 
 ## Coleções da 0.6.0
 
